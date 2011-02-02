@@ -6,6 +6,19 @@ arma::colvec x = Rcpp::as<arma::colvec> (x_);
 arma::mat Y = Rcpp::as<arma::mat>( Y_ ) ;
 arma::colvec z = Rcpp::as<arma::colvec>( z_ ) ;
 
+class Conditional_LatentPosition:public LatenPosition {
+private:
+  arma::mat Data;
+
+public:
+};
+
+Conditional_LatentPosition::Conditional_LatentPosition(arma::mat Data) : LatentPosition(arma::mat Param_in, arma::colvec Init_in)
+{
+  this.Data = Data;
+}
+
+
 
 class LatentPosition {
 private: 
@@ -16,10 +29,13 @@ private:
   
 public:
   LatentPosition(arma::mat Param_In, arma::colvec Init_In);
-  arma::mat Simulator(arma::rowvec dT);
+  ~LatentPosition();
+  virtual arma::mat Simulator(arma::rowvec dT);
+  void setParam(arma::mat Param_in);
+  void setInit(arma::mat Init_in);
 };
 
-LatentPosition::Simulator(arma::mat Param_in, arma::colvec Init_in)
+LatentPosition::LatentPosition(arma::mat Param_in, arma::colvec Init_in)
 {
   Param = Param_in;
   Init = Init_in;
@@ -28,7 +44,7 @@ LatentPosition::Simulator(arma::mat Param_in, arma::colvec Init_in)
   nparam = Param.n_cols;
 }
 
-arma::mat Simulator(arma::rowvec dT) 
+arma::mat LatentPosition::Simulator(arma::rowvec dT) 
 {
   double drift_term = 0;
   double volat_term = 0;
