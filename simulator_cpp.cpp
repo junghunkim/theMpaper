@@ -1,6 +1,6 @@
 //mysig = signature(param="matrix", init="numeric", LHS="numeric", RHS="numeric")
 //myinc = '
-#include <cmath> 
+#include <cmath>   
 
 arma::colvec x = Rcpp::as<arma::colvec> (x_);
 arma::mat Y = Rcpp::as<arma::mat>( Y_ ) ;
@@ -11,12 +11,51 @@ private:
   arma::mat Data;
 
 public:
+  void setData(arma::mat Data);
 };
 
-Conditional_LatentPosition::Conditional_LatentPosition(arma::mat Data) : LatentPosition(arma::mat Param_in, arma::colvec Init_in)
+Conditional_LatentPosition::Conditional_LatentPosition(arma::mat Data, arma::mat Param_in, arma::colvec Init_in) : LatentPosition(arma::mat Param_in, arma::colvec Init_in)
 {
   this.Data = Data;
-}
+};
+
+void Conditional_LatentPosition::setData(arma::mat Data) {
+  this.Data = Data;
+};
+
+arma::mat Conditional_LatentPosition::Simulate(arma::rowvec dT){
+  arma::mat sim_out;
+  int ngrid = dT.n_elem;
+  bool do_more = true;
+  double temp_val_1 = 0;
+  double temp_val_2 = 0;
+  while(do_more){  // need to know boolean type in c++
+    sim_out = LatentPosition::Simulate(dT); //need to know scope resolution
+    
+    for(int i=1;i<nvertex;i++){
+      mean(sim_out,dim=1)*arma:sum(dT);
+    };
+
+    for(int i=1;i<nvertex; i++){ //iterate through vertex
+      for(int j = (i+1); j <=nvertex;j++){ //iterate through diff vertex
+	int temp_int = sim_out[i-1,j-1];
+	if(temp_int == 1){ // 1 means topic one 
+	  temp_val_2 *= sim_out[i-1,t-1]*sim_out[j-1,t-1];
+	} else if(temp_int == 2) {
+	  temp_val_2 *= sim_out[i-1,t-1]*sim_out[j-1,t-1];
+	} else {
+	  temp_val_2 *= 1;
+	};	// then, need to know if two communicated and compute the weight here
+      }; 
+    };
+    
+
+    if(){
+      = T;
+    };
+  };
+
+};
 
 
 
@@ -25,14 +64,19 @@ private:
   long nvertex;
   int nparam;
   arma::mat Param;
-  arma::colvec Init;
-  
+  arma::colvec Init; 
 public:
   LatentPosition(arma::mat Param_In, arma::colvec Init_In);
-  ~LatentPosition();
+  virtual ~LatentPosition();
   virtual arma::mat Simulator(arma::rowvec dT);
   void setParam(arma::mat Param_in);
   void setInit(arma::mat Init_in);
+};
+
+void LatentPosition::setParam(arma::mat Param_in):
+{
+  this.Param = Param_in;
+  this.nparam = Param.n_rows;
 };
 
 LatentPosition::LatentPosition(arma::mat Param_in, arma::colvec Init_in)
@@ -53,8 +97,6 @@ arma::mat LatentPosition::Simulator(arma::rowvec dT)
   
   arma::mat States_VT(nvertex,ngrid);
   arma::colvec States_CU(Init);
-
-  arma::colvec dW(1);
   
   for(int itr_t=0;itr_t < ngrid;itr_t++) {
     for(int itr_v=0;itr_v <nvertex;itr_v++){
@@ -65,6 +107,3 @@ arma::mat LatentPosition::Simulator(arma::rowvec dT)
     States_CU = States_VT(arma::span::all,itr_t);
   }
 }
-
-//'
-
