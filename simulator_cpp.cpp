@@ -42,7 +42,7 @@ arma::mat Conditional_LatentPosition::Simulate(arma::rowvec dT){
 	if(temp_int == 1){ // 1 means topic one 
 	  temp_val_2 *= sim_out[i-1,t-1]*sim_out[j-1,t-1];
 	} else if(temp_int == 2) {
-	  temp_val_2 *= sim_out[i-1,t-1]*sim_out[j-1,t-1];
+	  temp_val_2 *= (1-sim_out[i-1,t-1])*(1-sim_out[j-1,t-1]);
 	} else {
 	  temp_val_2 *= 1;
 	};	// then, need to know if two communicated and compute the weight here
@@ -106,4 +106,35 @@ arma::mat LatentPosition::Simulator(arma::rowvec dT)
     }
     States_CU = States_VT(arma::span::all,itr_t);
   }
+}
+
+
+int main() {
+  const int NVERTEX = 4;
+  const int NPARAM = 3;
+  const int NGRID = 100;
+
+  arma::mat normal_vertex_param(NVERTEX,NPARAM);
+  arma::mat abnorm_vertex_param(NVERTEX,NPARAM);
+
+  normal_vertex_param.row(1);
+  normal_vertex_param.row(2);
+
+  abnormal_vertex_param.row(1);
+  abnormal_vertex_param.row(2);
+  
+  arma::mat X = arma::join_rows(normal_vertex_param,abnormal_vertex_param);
+  
+  LatentPosition myLP(X,);
+  arma::rowvec dT(NGRID);
+
+  arma::mat output(NVERTEX,NGRID) = myLP.simulate(dT);
+
+  for(int i=1;i < NVERTEX; i++){
+    for(int j=(i+1); j < NVERTEX;j++){
+      
+    };
+  };
+  
+  return 0;
 }
