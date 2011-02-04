@@ -8,10 +8,11 @@ arma::colvec z = Rcpp::as<arma::colvec>( z_ ) ;
 
 class Conditional_LatentPosition:public LatenPosition {
 private:
-  arma::mat Data;
+  arma::mat Data; // nrow = ntotal_emails & ncol= (v1,...,vN,time), and for each row, the last entry is 
 
 public:
-  void setData(arma::mat Data);
+  Conditional_LatentPosition(arma::mat Data, arma::mat Param_in, arma::colvec Init_in);
+  ~Conditional_LatentPosition();
 };
 
 Conditional_LatentPosition::Conditional_LatentPosition(arma::mat Data, arma::mat Param_in, arma::colvec Init_in) : LatentPosition(arma::mat Param_in, arma::colvec Init_in)
@@ -19,21 +20,20 @@ Conditional_LatentPosition::Conditional_LatentPosition(arma::mat Data, arma::mat
   this.Data = Data;
 };
 
-void Conditional_LatentPosition::setData(arma::mat Data) {
-  this.Data = Data;
-};
-
-arma::mat Conditional_LatentPosition::Simulate(arma::rowvec dT){
-  arma::mat sim_out;
+arma::mat Conditional_LatentPosition::Simulate(arma::rowvec dT){//for the conditional distribution, lhs,rhs can be varying
+  arma::mat sim_out; //nrow == nvertex  && ncol = original ngrid?
   int ngrid = dT.n_elem;
   bool do_more = true;
   double temp_val_1 = 0;
   double temp_val_2 = 0;
+
+  //more efficient to finish mc here....
+
   while(do_more){  // need to know boolean type in c++
     sim_out = LatentPosition::Simulate(dT); //need to know scope resolution
     
     for(int i=1;i<nvertex;i++){
-      mean(sim_out,dim=1)*arma:sum(dT);
+      mean(sim_out,dim=1)*arma::sum(dT);
     };
 
     for(int i=1;i<nvertex; i++){ //iterate through vertex
