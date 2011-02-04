@@ -8,6 +8,7 @@ arma::colvec z = Rcpp::as<arma::colvec>( z_ ) ;
 
 class Conditional_LatentPosition:public LatenPosition {
 private:
+  long mcrep;
   arma::mat Data; // nrow = ntotal_emails & ncol= (v1,...,vN,time), and for each row, the last entry is 
 
 public:
@@ -15,9 +16,10 @@ public:
   ~Conditional_LatentPosition();
 };
 
-Conditional_LatentPosition::Conditional_LatentPosition(arma::mat Data, arma::mat Param_in, arma::colvec Init_in) : LatentPosition(arma::mat Param_in, arma::colvec Init_in)
+Conditional_LatentPosition::Conditional_LatentPosition(long mcrep,arma::mat Data, arma::mat Param_in, arma::colvec Init_in) : LatentPosition(arma::mat Param_in, arma::colvec Init_in)
 {
-  this.Data = Data;
+  this.mcrep = mcrep;//should this be instantiated?
+  this.Data = Data;//should this be instantiated?
 };
 
 arma::mat Conditional_LatentPosition::Simulate(arma::rowvec dT){//for the conditional distribution, lhs,rhs can be varying
@@ -63,6 +65,10 @@ class LatentPosition {
 private: 
   long nvertex;
   int nparam;
+
+  double lhs;
+  double rhs;
+
   arma::mat Param;
   arma::colvec Init; 
 public:
@@ -71,21 +77,38 @@ public:
   virtual arma::mat Simulator(arma::rowvec dT);
   void setParam(arma::mat Param_in);
   void setInit(arma::mat Init_in);
+  void setLHSRHS(double lhs, double rhs);
 };
 
-void LatentPosition::setParam(arma::mat Param_in):
+void LatentPosition::setLHSRHS(double lhs, double rhs)
+{
+  this.lhs = lhs;
+  this.rhs = rhs;
+};
+
+void LatentPosition::setParam(arma::mat Param_in)
 {
   this.Param = Param_in;
-  this.nparam = Param.n_rows;
+  this.nparam = Param.n_cols;
 };
 
-LatentPosition::LatentPosition(arma::mat Param_in, arma::colvec Init_in)
+void LatentPosition::setInit(arma::mat Init_in)
 {
+  this.Init = Init_in;
+  this.nvertex = Init_in.n_rows;
+}
+
+LatentPosition::LatentPosition(arma::mat Param_in, arma::colvec Init_in, double lhs_in, double rhs_n)
+{
+  lhs = lhs_in;
+  rhs = rhs_in;
+
   Param = Param_in;
   Init = Init_in;
   
   nvertex = Param.n_rows;
   nparam = Param.n_cols;
+
 }
 
 arma::mat LatentPosition::Simulator(arma::rowvec dT) 
