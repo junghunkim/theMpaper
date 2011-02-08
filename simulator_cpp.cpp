@@ -1,16 +1,32 @@
 //mysig = signature(param="matrix", init="numeric", LHS="numeric", RHS="numeric")
 //myinc = '
-#include <cmath>   
+#include <cmath>  
 
-arma::colvec x = Rcpp::as<arma::colvec> (x_);
-arma::mat Y = Rcpp::as<arma::mat>( Y_ ) ;
-arma::colvec z = Rcpp::as<arma::colvec>( z_ ) ;
+arma::mat myParam = Rcpp::as<arma::colvec> (Param_);
+arma::mat myData = Rcpp::as<arma::mat>(Data_);
+arma::rowvec mydT = Rcpp::as<arma::rowvec>(dT_);
+arma::rowvec myInit = myParam.col(1); // 1 is for the mean values
+double maxMC = 100;
 
+const int NVERTEX = myParam.n_rows;
+const int NPARAM = myParam.n_cols;
+const int NGRID = 100;
+
+Conditional_LatentPosition myLP(myData,myParam,myInit);
+
+Rcpp::List myMCresult = Rcpp::List(maxMC);
+
+for(int mymc_itr=0; mymc_itr < maxMC; mymc_itr++){
+  myMCresult[mymc_itr] = myLP.simulate();
+ };
+
+return myMCresult;
+
+/*       */
 class Conditional_LatentPosition:public LatenPosition {
 private:
-  long mcrep;
   arma::mat Data; // nrow = ntotal_emails & ncol= (v1,...,vN,time), and for each row, the last entry is 
-
+  
 public:
   Conditional_LatentPosition(arma::mat Data, arma::mat Param_in, arma::colvec Init_in);
   ~Conditional_LatentPosition();
@@ -18,7 +34,6 @@ public:
 
 Conditional_LatentPosition::Conditional_LatentPosition(long mcrep,arma::mat Data, arma::mat Param_in, arma::colvec Init_in) : LatentPosition(arma::mat Param_in, arma::colvec Init_in)
 {
-  this.mcrep = mcrep;//should this be instantiated?
   this.Data = Data;//should this be instantiated?
 };
 
@@ -28,9 +43,7 @@ arma::mat Conditional_LatentPosition::Simulate(arma::rowvec dT){//for the condit
   bool do_more = true;
   double temp_val_1 = 0;
   double temp_val_2 = 0;
-
-  //more efficient to finish mc here....
-
+  
   while(do_more){  // need to know boolean type in c++
     sim_out = LatentPosition::Simulate(dT); //need to know scope resolution
     
@@ -108,7 +121,6 @@ LatentPosition::LatentPosition(arma::mat Param_in, arma::colvec Init_in, double 
   
   nvertex = Param.n_rows;
   nparam = Param.n_cols;
-
 }
 
 arma::mat LatentPosition::Simulator(arma::rowvec dT) 
@@ -129,35 +141,4 @@ arma::mat LatentPosition::Simulator(arma::rowvec dT)
     }
     States_CU = States_VT(arma::span::all,itr_t);
   }
-}
-
-
-int main() {
-  const int NVERTEX = 4;
-  const int NPARAM = 3;
-  const int NGRID = 100;
-
-  arma::mat normal_vertex_param(NVERTEX,NPARAM);
-  arma::mat abnorm_vertex_param(NVERTEX,NPARAM);
-
-  normal_vertex_param.row(1);
-  normal_vertex_param.row(2);
-
-  abnormal_vertex_param.row(1);
-  abnormal_vertex_param.row(2);
-  
-  arma::mat X = arma::join_rows(normal_vertex_param,abnormal_vertex_param);
-  
-  LatentPosition myLP(X,);
-  arma::rowvec dT(NGRID);
-
-  arma::mat output(NVERTEX,NGRID) = myLP.simulate(dT);
-
-  for(int i=1;i < NVERTEX; i++){
-    for(int j=(i+1); j < NVERTEX;j++){
-      
-    };
-  };
-  
-  return 0;
 }
