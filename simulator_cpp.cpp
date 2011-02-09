@@ -2,37 +2,68 @@
 //myinc = '
 #include <cmath>   
 
-arma::colvec x = Rcpp::as<arma::colvec> (x_);
-arma::mat Y = Rcpp::as<arma::mat>( Y_ ) ;
-arma::colvec z = Rcpp::as<arma::colvec>( z_ ) ;
+arma::mat Param = Rcpp::as<arma::mat>( Param_In ) ;
+arma::mat Data = Rcpp::as<arma::mat>( Data_In ) ;
+arma::colvec Init = Rcpp::as<arma::colvec>( Init_In ) ;
 
-class Conditional_LatentPosition:public LatenPosition {
-private:
-  long mcrep;
-  arma::mat Data; // nrow = ntotal_emails & ncol= (v1,...,vN,time), and for each row, the last entry is 
+class CondtionalLatentPosition {
+private: 
+  long nvertex;
+  int nparam;
+
+  arma::mat Param;
+  arma::mat Data_t;
+  arma::mat Data_s;
 
 public:
-  Conditional_LatentPosition(arma::mat Data, arma::mat Param_in, arma::colvec Init_in);
+  Conditional_LatentPosition(arma::mat Param_In, arma::colvec Init_In);
   ~Conditional_LatentPosition();
+  arma::mat rawSimulator();
+  arma::mat rejSimulator();
 };
 
-Conditional_LatentPosition::Conditional_LatentPosition(long mcrep,arma::mat Data, arma::mat Param_in, arma::colvec Init_in) : LatentPosition(arma::mat Param_in, arma::colvec Init_in)
+LatentPosition::LatentPosition(arma::mat Data_in, arma::mat Param_in)
 {
-  this.mcrep = mcrep;//should this be instantiated?
-  this.Data = Data;//should this be instantiated?
-};
+  Param = Param_in;
+  
+  nvertex = Param.n_rows;
+  nparam = Param.n_cols;
+  
+  nmessages = Data_in.nrows;
 
-arma::mat Conditional_LatentPosition::Simulate(arma::rowvec dT){//for the conditional distribution, lhs,rhs can be varying
+  Data_t = Data_in(span(1,nmessages),0);
+  Data_s = Data_in(span(1,nmessages),span(1,nvertex));
+}
+
+arma::mat LatentPosition::rawSimulator(double myLHS, double myRHS, arma::mat Init, int ngrid=10) 
+{
+  double drift_term = 0;
+  double volat_term = 0;
+  
+  arma::mat States_VT(1+nvertex,ngrid);
+  arma::mat States_CU(Init);
+  
+  States_VT
+  for(int itr_t=0;itr_t < ngrid;itr_t++) {
+    for(int itr_v=0;itr_v <nvertex;itr_v++){
+      drift_term = Param(itr_v,1)*(States_CU(itr_v) - Param(itr_v,2))/ngrid;
+      volat_term = Param(itr_v,3)*sqrt(States_CU(itr_v)*(1-States_CU(itr_v))/ngrid)*as_scalar(arma::randn());
+      States_VT(itr_v,itr_t) = draft_term + volat_term; 
+    }
+    States_CU = States_VT(arma::span::all,itr_t);
+  }
+  return(States_VT);
+}
+
+arma::mat Conditional_LatentPosition::RejectionSampling(){
   arma::mat sim_out; //nrow == nvertex  && ncol = original ngrid?
-  int ngrid = dT.n_elem;
   bool do_more = true;
-  double temp_val_1 = 0;
-  double temp_val_2 = 0;
 
-  //more efficient to finish mc here....
+  setLSHRHS(curlhs,currhs);
+  setInit(arma)
+  while(do_more){  
 
-  while(do_more){  // need to know boolean type in c++
-    sim_out = LatentPosition::Simulate(dT); //need to know scope resolution
+    sim_out = Simulate(dT); //need to know scope resolution
     
     for(int i=1;i<nvertex;i++){
       mean(sim_out,dim=1)*arma::sum(dT);
@@ -59,27 +90,6 @@ arma::mat Conditional_LatentPosition::Simulate(arma::rowvec dT){//for the condit
 
 };
 
-
-
-class LatentPosition {
-private: 
-  long nvertex;
-  int nparam;
-
-  double lhs;
-  double rhs;
-
-  arma::mat Param;
-  arma::colvec Init; 
-public:
-  LatentPosition(arma::mat Param_In, arma::colvec Init_In);
-  virtual ~LatentPosition();
-  virtual arma::mat Simulator(arma::rowvec dT);
-  void setParam(arma::mat Param_in);
-  void setInit(arma::mat Init_in);
-  void setLHSRHS(double lhs, double rhs);
-};
-
 void LatentPosition::setLHSRHS(double lhs, double rhs)
 {
   this.lhs = lhs;
@@ -98,38 +108,7 @@ void LatentPosition::setInit(arma::mat Init_in)
   this.nvertex = Init_in.n_rows;
 }
 
-LatentPosition::LatentPosition(arma::mat Param_in, arma::colvec Init_in, double lhs_in, double rhs_n)
-{
-  lhs = lhs_in;
-  rhs = rhs_in;
 
-  Param = Param_in;
-  Init = Init_in;
-  
-  nvertex = Param.n_rows;
-  nparam = Param.n_cols;
-
-}
-
-arma::mat LatentPosition::Simulator(arma::rowvec dT) 
-{
-  double drift_term = 0;
-  double volat_term = 0;
-  
-  int ngrid = dT.n_elem;
-  
-  arma::mat States_VT(nvertex,ngrid);
-  arma::colvec States_CU(Init);
-  
-  for(int itr_t=0;itr_t < ngrid;itr_t++) {
-    for(int itr_v=0;itr_v <nvertex;itr_v++){
-      drift_term = Param(itr_v,1)*(States_CU(itr_v) - Param(itr_v,2))*dT(itr_t);
-      volat_term = Param(itr_v,3)*sqrt(States_CU(itr_v)*(1-States_CU(itr_v))*dT(itr_t))*as_scalar(arma::randn());
-      States_VT(itr_v,itr_t) = draft_term + volat_term; 
-    }
-    States_CU = States_VT(arma::span::all,itr_t);
-  }
-}
 
 
 int main() {
