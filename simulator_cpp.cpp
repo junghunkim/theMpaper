@@ -1,46 +1,56 @@
 #include <cmath>   
+#include <armadillo>
 
-arma::mat Param = Rcpp::as<arma::mat>( Param_In ) ;
-arma::mat Data = Rcpp::as<arma::mat>( Data_In ) ;
-arma::colvec Init = Rcpp::as<arma::colvec>( Init_In ) ;
+using namespace arma;
+using namespace Rcpp;
+
+arma::mat Param = as<arma::mat>( Param_In ) ;
+arma::mat Data = as<arma::mat>( Data_In ) ;
+arma::colvec Init = as<arma::colvec>( Init_In ) ;
 
 class CondtionalLatentPosition {
 private: 
-  long nvertex;
+  int nvertex;
   int nparam;
+  int nmessages;
+  int ngrid;
 
-  arma::mat Param;
-  arma::mat Data_t;
-  arma::mat Data_s;
+  mat Param;
+  colvec Data_t;
+  mat Data_s;
+  colvec Data_k;
 
 public:
-  Conditional_LatentPosition(arma::mat Param_In, arma::colvec Init_In);
-  ~Conditional_LatentPosition();
-  arma::mat rawSimulator();
-  arma::mat rejSimulator();
+  ConditionalLatentPosition(mat Param_In, colvec Init_In);
+  ~ConditionalLatentPosition();
+  mat rawSimulator();
+  mat rejSimulator();
 };
 
-LatentPosition::LatentPosition(arma::mat Data_in, arma::mat Param_in)
+typedef CLP ConditionalLatentPosition;
+
+CLP::ConditionalLatentPosition(mat Data_in, mat Param_in): ngrid(10)
 {
   Param = Param_in;
   
   nvertex = Param.n_rows;
   nparam = Param.n_cols;
-  
+
   nmessages = Data_in.nrows;
 
   Data_t = Data_in(span(1,nmessages),0);
   Data_s = Data_in(span(1,nmessages),span(1,nvertex));
+  Data_k = Data_in(span(1,nmessages),nvertex+1));
 }
 
-arma::mat LatentPosition::rawSimulator(double myLHS, double myRHS, arma::mat Init, int ngrid=10) 
+mat CLP::rawSimulator(double myLHS, double myRHS, colvec Init) 
 {
   double drift_term = 0;
   double volat_term = 0;
   
-  arma::mat States_VT(1+nvertex,ngrid+1);
+  mat States_VT(1+nvertex,ngrid+1);
   
-  const double dT = (myRHS-myLHS)/ngrid;
+  double dT = (myRHS-myLHS)/ngrid;
 
   States_VT(0,0) = myLHS;
   States_VT(span(1,nvertex),0) = Init;
@@ -49,7 +59,7 @@ arma::mat LatentPosition::rawSimulator(double myLHS, double myRHS, arma::mat Ini
     States_VT(0,itr_t) = States_VT(0,itr_t-1) + dT; 
     for(int itr_v=1;itr_v <= nvertex; itr_v++){
       drift_term = Param(itr_v,1)*(States_VT(itr_v,itr_t-1) - Param(itr_v,0))*dT;
-      volat_term = Param(itr_v,2)*sqrt(States_VT(itr_v,itr_t)*(1-States_VT(itr_v,itr_t-1))*dT)*as_scalar(arma::randn());
+      volat_term = Param(itr_v,2)*sqrt(States_VT(itr_v,itr_t)*(1-States_VT(itr_v,itr_t-1))*dT)*as_scalar(randn());
       States_VT(itr_v,itr_t) = draft_term + volat_term; 
     };
   };
@@ -57,42 +67,73 @@ arma::mat LatentPosition::rawSimulator(double myLHS, double myRHS, arma::mat Ini
   return(States_VT);
 }
 
-arma::mat Conditional_LatentPosition::rejSimulator(){
-  arma::mat sim_out; 
-  bool do_more = true;
+mat CLP::rejSimulator(){
+  mat retOBJ = zeros(1,ngrid+1);
 
-  for(int itr.message=0;itr.message<nmessages;itr.messages++){
-    double myLHS =;
-    double myRHS =;
-    arma::mat myInit=;
+  mat sim_out; 
+  bool do_more = true;
+  colvec myInit;
+  double myLHS;
+  double myRHS;
+  colvec myVERTEX;
+  int myTOPIC;
+
+  for(int itr_message=0; itr_message < nmessages; itr_messages++){
+    myLHS = Data_t(itr_message);
+    myRHS = Data_t(itr_message+1);
+    myVERTEX = Data_s(itr_message+1,span(1,nvertex)); 
+    myTOPIC = Data_s(itr_message+1,nvertex+1);
+
+    if(itr_message == 0){
+      myInit = Param(span(1,nvertex),0);
+    } else {
+      myInit = sim_out(span(1,nvertex),ngrid);      
+    }
+
     while(do_more){  
-      
-      sim_out = Simulate(myLHS,myRHS,myInit); 
-      
-      for(int i=1;i<nvertex;i++){
-	mean(sim_out,dim=1)*arma::sum(dT);
-      };
+      sim_out = rawSimulator(myLHS,myRHS,myInit); 
+
+      double mycumsum = 0;
       
       for(int i=1;i<nvertex; i++){ //iterate through vertex
-	for(int j = (i+1); j <=nvertex;j++){ //iterate through diff vertex
-	  int temp_int = sim_out[i-1,j-1];
-	  if(temp_int == 1){ // 1 means topic one 
-	    temp_val_2 *= sim_out[i-1,t-1]*sim_out[j-1,t-1];
-	  } else if(temp_int == 2) {
-	    temp_val_2 *= (1-sim_out[i-1,t-1])*(1-sim_out[j-1,t-1]);
+	for(int j = (i+1); j<= nvertex;j++){ //iterate through diff vertex
+	  colvec curpath_i = sim_out(i,span(0,ngrid));
+	  colvec curpath_j = sim_out(j,span(0,ngrid));
+
+	  mat temppath_i = join(curpath_i,1-curpath_i);
+	  mat temppath_j = join(curpath_j,1-curpath_j);
+	  
+	  mat temppath_ija = join(curpath_i, cur_path_j);
+	  mat temppath_ijb = join(1 - curpath_i, 1 - curpath_j);
+	  colvec templambda_ij_1 = prod(temppath_ija, 1);
+	  colvec templambda_ij_2 = prod(temppath_ijb,1);
+
+	  mat templambda_ij_both = join(templambda_ij_1, templambda_ij_2);
+	  
+	  colvec templambda_ij = sum(templambda_ij_both,1);
+	  int nrow = templambda_ij.nelem;
+
+	  double templambda_ij_end; 
+
+	  if(myVERTEX(i) == 1 && myVERTEX(j) == 1){
+	    templambda_ij_end = templambda_ij_both(nrow,myTOPIC);
 	  } else {
-	    temp_val_2 *= 1;
-	  };	// then, need to know if two communicated and compute the weight here
-	}; 
-      };
-    };  
-    
-    if(){
-      = T;
-    };
-  };
-  
-};
+	    templambda_ij_end = 1;
+	  }
+	  
+	  mycumsum = mycumsum +log(templambda_ij_end) + log(exp(-mean(templambda_ij)*(myRHS-myLHS)));
+	  
+	  if(log(runif(1)) < mycumsum) {
+	    do_more = false;
+	  } else {
+	    do_more = true;
+	  }
+	  
+	  retOBJ = join(retOBJ,sim_out);
+      }
+    } 
+  }
+}
 
 int main() {
   const int NVERTEX = 4;
@@ -110,7 +151,7 @@ int main() {
   
   arma::mat X = arma::join_rows(normal_vertex_param,abnormal_vertex_param);
   
-  LatentPosition myLP(X,);
+  CLP myLP(X,);
   arma::rowvec dT(NGRID);
 
   arma::mat output(NVERTEX,NGRID) = myLP.simulate(dT);
