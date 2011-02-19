@@ -68,9 +68,8 @@ mat CLP::rawSimulator(double myLHS, double myRHS, colvec Init)
 }
 
 mat CLP::rejSimulator(){
-  mat retOBJ = zeros(1,ngrid+1);
+  mat retOBJ = Param(span::all,0);
   mat retOBJ_prop; 
-  bool do_more = true;
 
   double myLHS_cur;
   double myRHS_cur;
@@ -90,53 +89,56 @@ mat CLP::rejSimulator(){
     } else {
       // otherwise updated at the end of the while-loop below
     }
-
+   
+    bool do_more = true;
+    
     while(do_more){  
       retOBJ_prop = rawSimulator(myLHS_cur,myRHS_cur,myINIT_cur); 
 
       double mystop_prob = 0;
+      double weight = 0;
+	
       
       for(int i=0;i < (nvertex-1); ++i){ //iterate through vertex
 	for(int j = (i+1); j < nvertex; ++j){ //iterate through diff vertex
-	  colvec curpath_i = retOBJ_prop(i,span::all);
-	  colvec curpath_j = retOBJ_prop(j,span::all);
+	  colvec path_i = retOBJ_prop(i,span::all);
+	  colvec path_j = retOBJ_prop(j,span::all);
 
-	  mat temppath_i = join_cols(curpath_i,1-curpath_i);
-	  mat temppath_j = join_cols(curpath_j,1-curpath_j);
+	  mat path_i_pvec = join_cols(path_i,1-path_i);
+	  mat path_j_pvec = join_cols(path_j,1-path_j);
 	  
-	  mat temppath_ija = join_cols(curpath_i, cur_path_j);
-	  mat temppath_ijb = join_cols(1 - curpath_i, 1 - curpath_j);
+	  mat temppath_ij_1 = join_cols(curpath_i, cur_path_j);
+	  mat temppath_ij_2 = join_cols(1 - curpath_i, 1 - curpath_j);
+	  colvec path_ij_rate_1 = prod(temppath_ij_1,1);
+	  colvec path_ij_rate_2 = prod(temppath_ij_2,1);
 
-	  colvec templambda_ij_1 = prod(temppath_ija,1);
-	  colvec templambda_ij_2 = prod(temppath_ijb,1);
-
-	  mat templambda_ij_both = join_cols(templambda_ij_1, templambda_ij_2);
-	  
-	  colvec templambda_ij = sum(templambda_ij_both,1);
+	  mat path_ij_rate_both = join_cols(path_ij_rate_1, path_ij_rate_2);
+	  colvec path_ij_rate_sum = sum(path_ij_rate_both,1);
 	  int nrow = templambda_ij.nelem;
 
-	  double templambda_ij_end; 
-
 	  if(myVERTEX(i) == 1 && myVERTEX(j) == 1){
-	    templambda_ij_end = templambda_ij_both(nrow,myTOPIC);
+	    weight = path_ij_both(nrow,myTOPIC);
 	  } else {
-	    templambda_ij_end = 1;
+	    weight = 1;
 	  }
 	  
-	  mycumsum = mycumsum +log(templambda_ij_end) + log(exp(-mean(templambda_ij)*(myRHS-myLHS)));
-	  
-	  if(log(runif(1)) < mycumsum) {
-	    do_more = false;
-	  } else {
-	    do_more = true;
-	  }
-	  
-	  retOBJ = join_rows(retOBJ,sim_out);
+	  mystop_prob = mystop_prob + log(weight) - mean(path_ij_rate_sum)*(myRHS_cur-myLHS_cur);
 	}
       } 
-    }
+      
+      // now the decision time
+      if(log(runif(1)) < mystop_prob) {
+	do_more = false;
+      } else {
+	do_more = true;
+      }
+    } // this finishes one interval ... if not rejected ...
     
-    return(retOBJ);
+    retOBJ = join_cols(retOBJ,retOBJ_prop);
+    // starting new interval
+  }
+
+  return(retOBJ);
 }
 
 int main() {
