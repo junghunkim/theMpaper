@@ -2,11 +2,11 @@
 #include <armadillo>
 
 using namespace arma;
-using namespace Rcpp;
 
-arma::mat Param = as<arma::mat>( Param_In ) ;
-arma::mat Data = as<arma::mat>( Data_In ) ;
-arma::colvec Init = as<arma::colvec>( Init_In ) ;
+// using namespace Rcpp;
+// arma::mat Param = as<arma::mat>( Param_In ) ;
+// arma::mat Data = as<arma::mat>( Data_In ) ;
+// arma::colvec Init = as<arma::colvec>( Init_In ) ;
 
 class CondtionalLatentPosition {
 private: 
@@ -38,77 +38,79 @@ CLP::ConditionalLatentPosition(mat Data_in, mat Param_in): ngrid(10)
 
   nmessages = Data_in.nrows;
 
-  Data_t = Data_in(span(1,nmessages),0);
-  Data_s = Data_in(span(1,nmessages),span(1,nvertex));
-  Data_k = Data_in(span(1,nmessages),nvertex+1));
+  Data_t = Data_in(span::all, 0);
+  Data_v = Data_in(span::all, span(1,nvertex));
+  Data_k = Data_in(span::all, nvertex+1));
 }
 
 mat CLP::rawSimulator(double myLHS, double myRHS, colvec Init) 
 {
-  double drift_term = 0;
-  double volat_term = 0;
+  const double dT = (myRHS-myLHS)/ngrid;
+  double drift = 0;
+  double volat = 0; 
   
-  mat States_VT(1+nvertex,ngrid+1);
-  
-  double dT = (myRHS-myLHS)/ngrid;
+  rowvec States_T(ngrid+1);
+  mat States_VX(nvertex,ngrid+1);
+ 
+  States_T(0) = myLHS;
+  States_VX(span::all,0) = Init;
 
-  States_VT(0,0) = myLHS;
-  States_VT(span(1,nvertex),0) = Init;
-
-  for(int itr_t=1;itr_t <= ngrid; itr_t++) {
-    States_VT(0,itr_t) = States_VT(0,itr_t-1) + dT; 
-    for(int itr_v=1;itr_v <= nvertex; itr_v++){
-      drift_term = Param(itr_v,1)*(States_VT(itr_v,itr_t-1) - Param(itr_v,0))*dT;
-      volat_term = Param(itr_v,2)*sqrt(States_VT(itr_v,itr_t)*(1-States_VT(itr_v,itr_t-1))*dT)*as_scalar(randn());
-      States_VT(itr_v,itr_t) = draft_term + volat_term; 
+  for(int itr_t=1;itr_t <= ngrid; ++itr_t) {
+    States_T(itr_t) = States_T(itr_t-1) + dT; 
+    for(int itr_v=0;itr_v < nvertex; ++itr_v){
+      drift = Param(itr_v,1)*(States_VX(itr_v,itr_t-1) - Param(itr_v,0))*dT;
+      volat = Param(itr_v,2)*sqrt(States_VX(itr_v,itr_t)*(1-States_VX(itr_v,itr_t-1))*dT)*as_scalar(randn());
+      States_VX(itr_v,itr_t) = drift + volat; 
     };
   };
 
-  return(States_VT);
+  return(join_rows(States_VX,States_T));
 }
 
 mat CLP::rejSimulator(){
   mat retOBJ = zeros(1,ngrid+1);
-
-  mat sim_out; 
+  mat retOBJ_prop; 
   bool do_more = true;
-  colvec myInit;
-  double myLHS;
-  double myRHS;
-  colvec myVERTEX;
-  int myTOPIC;
 
-  for(int itr_message=0; itr_message < nmessages; itr_messages++){
-    myLHS = Data_t(itr_message);
-    myRHS = Data_t(itr_message+1);
-    myVERTEX = Data_s(itr_message+1,span(1,nvertex)); 
-    myTOPIC = Data_s(itr_message+1,nvertex+1);
+  double myLHS_cur;
+  double myRHS_cur;
+
+  colvec myINIT_cur;
+  colvec myVERTEX_cur;
+  int myTOPIC_cur;
+
+  for(int itr_message=0; itr_message < nmessages-1; itr_message++){
+    myLHS_cur = Data_t(itr_message);
+    myRHS_cur = Data_t(itr_message+1);
+    myVERTEX_cur = Data_s(itr_message+1,span(1,nvertex)); 
+    myTOPIC_cur = Data_s(itr_message+1,nvertex+1);
 
     if(itr_message == 0){
-      myInit = Param(span(1,nvertex),0);
+      myINIT_cur = Param(span::all,0);
     } else {
-      myInit = sim_out(span(1,nvertex),ngrid);      
+      // otherwise updated at the end of the while-loop below
     }
 
     while(do_more){  
-      sim_out = rawSimulator(myLHS,myRHS,myInit); 
+      retOBJ_prop = rawSimulator(myLHS_cur,myRHS_cur,myINIT_cur); 
 
-      double mycumsum = 0;
+      double mystop_prob = 0;
       
-      for(int i=1;i<nvertex; i++){ //iterate through vertex
-	for(int j = (i+1); j<= nvertex;j++){ //iterate through diff vertex
-	  colvec curpath_i = sim_out(i,span(0,ngrid));
-	  colvec curpath_j = sim_out(j,span(0,ngrid));
+      for(int i=0;i < (nvertex-1); ++i){ //iterate through vertex
+	for(int j = (i+1); j < nvertex; ++j){ //iterate through diff vertex
+	  colvec curpath_i = retOBJ_prop(i,span::all);
+	  colvec curpath_j = retOBJ_prop(j,span::all);
 
-	  mat temppath_i = join(curpath_i,1-curpath_i);
-	  mat temppath_j = join(curpath_j,1-curpath_j);
+	  mat temppath_i = join_cols(curpath_i,1-curpath_i);
+	  mat temppath_j = join_cols(curpath_j,1-curpath_j);
 	  
-	  mat temppath_ija = join(curpath_i, cur_path_j);
-	  mat temppath_ijb = join(1 - curpath_i, 1 - curpath_j);
-	  colvec templambda_ij_1 = prod(temppath_ija, 1);
+	  mat temppath_ija = join_cols(curpath_i, cur_path_j);
+	  mat temppath_ijb = join_cols(1 - curpath_i, 1 - curpath_j);
+
+	  colvec templambda_ij_1 = prod(temppath_ija,1);
 	  colvec templambda_ij_2 = prod(temppath_ijb,1);
 
-	  mat templambda_ij_both = join(templambda_ij_1, templambda_ij_2);
+	  mat templambda_ij_both = join_cols(templambda_ij_1, templambda_ij_2);
 	  
 	  colvec templambda_ij = sum(templambda_ij_both,1);
 	  int nrow = templambda_ij.nelem;
@@ -129,10 +131,12 @@ mat CLP::rejSimulator(){
 	    do_more = true;
 	  }
 	  
-	  retOBJ = join(retOBJ,sim_out);
-      }
-    } 
-  }
+	  retOBJ = join_rows(retOBJ,sim_out);
+	}
+      } 
+    }
+    
+    return(retOBJ);
 }
 
 int main() {
