@@ -61,15 +61,14 @@ mat CLP::rawSimulator(double myLHS, double myRHS, colvec Init)
       drift = Param(itr_v,1)*(States_VX(itr_v,itr_t-1) - Param(itr_v,0))*dT;
       volat = Param(itr_v,2)*sqrt(States_VX(itr_v,itr_t)*(1-States_VX(itr_v,itr_t-1))*dT)*as_scalar(randn());
       States_VX(itr_v,itr_t) = drift + volat; 
-    };
-  };
+    }
+  }
 
-  return(join_rows(States_VX,States_T));
+  return(join_cols(States_VX,States_T));
 }
 
 mat CLP::rejSimulator(){
-  mat retOBJ = Param(span::all,0);
-  mat retOBJ_prop; 
+  colvec retOBJ = Param(span::all,0);
 
   double myLHS_cur;
   double myRHS_cur;
@@ -81,8 +80,8 @@ mat CLP::rejSimulator(){
   for(int itr_message=0; itr_message < nmessages-1; itr_message++){
     myLHS_cur = Data_t(itr_message);
     myRHS_cur = Data_t(itr_message+1);
-    myVERTEX_cur = Data_s(itr_message+1,span(1,nvertex)); 
-    myTOPIC_cur = Data_s(itr_message+1,nvertex+1);
+    myVERTEX_cur = Data_v(itr_message+1,span::all); 
+    myTOPIC_cur = Data_k(itr_message+1);
 
     if(itr_message == 0){
       myINIT_cur = Param(span::all,0);
@@ -93,48 +92,53 @@ mat CLP::rejSimulator(){
     bool do_more = true;
     
     while(do_more){  
-      retOBJ_prop = rawSimulator(myLHS_cur,myRHS_cur,myINIT_cur); 
+      mat retOBJ_prop = rawSimulator(myLHS_cur,myRHS_cur,myINIT_cur);
+      mat State_VX_prop = retOBJ_prop(span(0,nvertex-1),span::all);
+      mat State_T_prop = retOBJ_prop(nvertex,span::all);
 
+      int myRHS_index = retOBJ_prop.ncol-1;
       double mystop_prob = 0;
       double weight = 0;
 	
       
       for(int i=0;i < (nvertex-1); ++i){ //iterate through vertex
 	for(int j = (i+1); j < nvertex; ++j){ //iterate through diff vertex
-	  colvec path_i = retOBJ_prop(i,span::all);
-	  colvec path_j = retOBJ_prop(j,span::all);
+	  colvec path_i = State_VX_prop(i,span::all);
+	  colvec path_j = STate_VX_prop(j,span::all);
 
-	  mat path_i_pvec = join_cols(path_i,1-path_i);
-	  mat path_j_pvec = join_cols(path_j,1-path_j);
+	  mat path_i_pvec = join_rows(path_i,1-path_i);
+	  mat path_j_pvec = join_rows(path_j,1-path_j);
 	  
-	  mat temppath_ij_1 = join_cols(curpath_i, cur_path_j);
-	  mat temppath_ij_2 = join_cols(1 - curpath_i, 1 - curpath_j);
+	  mat temppath_ij_1 = join_rows(curpath_i, curpath_j);
+	  mat temppath_ij_2 = join_rows(1 - curpath_i, 1 - curpath_j);
 	  colvec path_ij_rate_1 = prod(temppath_ij_1,1);
 	  colvec path_ij_rate_2 = prod(temppath_ij_2,1);
 
-	  mat path_ij_rate_both = join_cols(path_ij_rate_1, path_ij_rate_2);
+	  mat path_ij_rate_both = join_rows(path_ij_rate_1, path_ij_rate_2);
 	  colvec path_ij_rate_sum = sum(path_ij_rate_both,1);
-	  int nrow = templambda_ij.nelem;
 
-	  if(myVERTEX(i) == 1 && myVERTEX(j) == 1){
-	    weight = path_ij_both(nrow,myTOPIC);
+	  if(myVERTEX_cur(i) == 1 && myVERTEX_cur(j) == 1){
+	    weight = path_ij_both(myRHS_index, myTOPIC_cur);
 	  } else {
 	    weight = 1;
 	  }
 	  
 	  mystop_prob = mystop_prob + log(weight) - mean(path_ij_rate_sum)*(myRHS_cur-myLHS_cur);
-	}
-      } 
+	} // j>i for-ends
+      } // i for-ends
       
       // now the decision time
       if(log(runif(1)) < mystop_prob) {
 	do_more = false;
+	myINIT_cur = State_VX_prop(span::all,myRHS_index);	
       } else {
 	do_more = true;
       }
+
     } // this finishes one interval ... if not rejected ...
     
-    retOBJ = join_cols(retOBJ,retOBJ_prop);
+    retOBJ_prop = retOBJ_prop(span::all,span(1,myRHS_index));
+    retOBJ = join_rows(retOBJ,retOBJ_prop);
     // starting new interval
   }
 
