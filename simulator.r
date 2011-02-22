@@ -73,7 +73,7 @@ mysimulator.cond <- function(ts.TKVs.obs=NULL,cur.psi=NULL,maxTime=NULL,mybaseRa
                   }
                 
                 mycumsum = 0
-                
+
                 for(itr.i in 1:(nvertex-1)){
                   for(itr.j in (itr.i+1):(nvertex)){
                       

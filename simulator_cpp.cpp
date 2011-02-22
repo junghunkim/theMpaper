@@ -21,26 +21,43 @@ private:
   colvec Data_k;
 
 public:
-  ConditionalLatentPosition(mat Param_In, colvec Init_In);
+  ConditionalLatentPosition(mat Data_in, int nParam_in);
   ~ConditionalLatentPosition();
+  void setParam(mat Param_in);
   mat rawSimulator();
   mat rejSimulator();
+  mat getMeans(int maxMC);
 };
 
 typedef CLP ConditionalLatentPosition;
 
-CLP::ConditionalLatentPosition(mat Data_in, mat Param_in): ngrid(10)
+colvec CLP::getMeans(int maxMC):maxMC(100) {
+  colvec retVec= zeros(nvertex);
+  mat cur_sim;
+
+  for(int mc_itr = 0; mc_itr < maxMC; ++mc_itr){
+    cur_sim = rejSimulator();
+    retVec = retVec + mean(cur_sim(span(0,nvertex-1),span::all),dim=1)
+  }
+  return(retVec);
+}
+
+void CLP::setParam(mat Param_in)
 {
   Param = Param_in;
-  
-  nvertex = Param.n_rows;
-  nparam = Param.n_cols;
+}
 
+
+CLP::ConditionalLatentPosition(mat Data_in, int nParam_in, int nVertex_in): ngrid(10)
+{
+  nvertex = nVertex_in;
+  nparam = nParam_in;
   nmessages = Data_in.nrows;
 
   Data_t = Data_in(span::all, 0);
   Data_v = Data_in(span::all, span(1,nvertex));
   Data_k = Data_in(span::all, nvertex+1));
+
 }
 
 mat CLP::rawSimulator(double myLHS, double myRHS, colvec Init) 
@@ -146,31 +163,31 @@ mat CLP::rejSimulator(){
 }
 
 int main() {
-  const int NVERTEX = 4;
+  const int NVERTEX_Normal = 2;
+  const int NVERTEX_Abnorm = 2;
+  const int NVERTEX = NVERTEX_Normal + NVERTEX_Abnorm;
   const int NPARAM = 3;
-  const int NGRID = 100;
 
-  arma::mat normal_vertex_param(NVERTEX,NPARAM);
-  arma::mat abnorm_vertex_param(NVERTEX,NPARAM);
+  mat normal_vertex_param(NVERTEX_Normal, NPARAM);
+  mat abnorm_vertex_param(NVERTEX_Abnorm, NPARAM);
+  mat myParam(NVERTEX,NPARAM);
 
-  normal_vertex_param.row(1);
-  normal_vertex_param.row(2);
-
-  abnormal_vertex_param.row(1);
-  abnormal_vertex_param.row(2);
+  normal_vertex_param << 0.5 << -1 << 1 << endr << 0.5 << -1 << 1 << endr;
+  abnormal_vertex_param << 0.5 << -1 << 1 << endr << 0.5 << -1 << 1 << endr;
+  myParam = join_cols(normal_vertex_param,abnormal_vertex_param);
   
-  arma::mat X = arma::join_rows(normal_vertex_param,abnormal_vertex_param);
-  
-  CLP myLP(X,);
-  arma::rowvec dT(NGRID);
+  mat myData;
+  myData.load("myData.txt");
 
-  arma::mat output(NVERTEX,NGRID) = myLP.simulate(dT);
-
-  for(int i=1;i < NVERTEX; i++){
-    for(int j=(i+1); j < NVERTEX;j++){
-      
-    };
-  };
+  CLP myCLP(myData, NPARAM, NVERTEX);
   
+  myCLP.setParam(myParam);
+
+  int maxSearch = 1;
+  for(int i=0;i < maxSearch; ++i){
+    myParam(0, span::all) = myCLP.getMean();
+    myCLP.setParam(myParam);
+  }
+
   return 0;
 }

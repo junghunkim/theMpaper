@@ -18,6 +18,9 @@ int main(int argc, char** argv)
   B = join_rows(A,B);
 
   cout << B << endl;
+
+  B.load("myData.txt");
   
+  cout << B(span::all,0)<< endl;
   return 0;
   }

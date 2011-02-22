@@ -6,8 +6,8 @@ nstep = 100
 nvertex = 4
 
 myunitRate = 10
-myPsi.C1 = rep(c(1,-2,0.5),2)
-myPsi.C2 = rep(c(1,-2,0.5),2)
+myPsi.C1 = rep(c(1,-2,0.3),2)
+myPsi.C2 = rep(c(1,-2,0.8),2)
 myPsi = c(myPsi.C1,myPsi.C2)
 myPsi = matrix(myPsi,byrow=T,nrow=nvertex)
 
@@ -64,6 +64,10 @@ for( i in 1:(nvertex-1) ) {
 ts.TKVs.all = ts.TKVs[order(ts.TKVs[,1]),]
 ts.TKVs.obs = ts.TKVs.all[ts.TKVs.all[,2]>0,]
 
+outOBJ = ts.TKVs.obs[,c(1,(3:(2+nvertex)),2)]
+write.table(outOBJ,"myData.txt",sep=" ",col.names=F,row.names=F);
+
+
 time.ts = ts.TKVs.obs[,1]
 nobs = length(time.ts)
 topic.id = c("red","black")
@@ -104,8 +108,7 @@ for(itr.nobs in 1:nobs){
     lhs = LHS+(itr.grid)*dT
     ts.TKVs.grid[itr.row,] = c(lhs,rep(0,nvertex+1))
     itr.row = itr.row + 1
-  }
-  
+  } 
 }
 
 save(file="mydata.RData")
