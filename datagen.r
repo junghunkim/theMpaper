@@ -3,11 +3,11 @@ source("simulator.r")
 
 maxTime = 1
 nstep = 100
-nvertex = 4
+nvertex = 25
 
-myunitRate = 10
-myPsi.C1 = rep(c(1,-2,0.3),2)
-myPsi.C2 = rep(c(1,-2,0.8),2)
+myunitRate = 1
+myPsi.C1 = rep(c(1,-1,0.3),15)
+myPsi.C2 = rep(c(1,-1,0.8),10)
 myPsi = c(myPsi.C1,myPsi.C2)
 myPsi = matrix(myPsi,byrow=T,nrow=nvertex)
 
@@ -66,6 +66,7 @@ ts.TKVs.obs = ts.TKVs.all[ts.TKVs.all[,2]>0,]
 
 outOBJ = ts.TKVs.obs[,c(1,(3:(2+nvertex)),2)]
 write.table(outOBJ,"myData.txt",sep=" ",col.names=F,row.names=F);
+nrow(outOBJ)
 
 
 time.ts = ts.TKVs.obs[,1]
