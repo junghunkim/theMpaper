@@ -185,10 +185,11 @@ int main(int argc, char **argv) {
   
   mat tmpmat;
   tmpmat.load("SIMIN.mat", raw_ascii);
+  cout << tmpmat;
   myParam.col(0) = trans(tmpmat.row(tmpmat.n_rows - 1));
   myParam.col(1) = ones(NVERTEX)*(-1);
   myParam.col(2) = ones(NVERTEX);
-  
+  cout << myParam;
   // normal_vertex_param << 0.5 << -1 << 1 << endr << 0.5 << -1 << 1 << endr;
   // abnorm_vertex_param << 0.5 << -1 << 1 << endr << 0.5 << -1 << 1 << endr;
   // cout << "Test 1" << endl;
@@ -197,12 +198,12 @@ int main(int argc, char **argv) {
   //  cout << "Test 2" << endl;
  mat myData;
   myData.load("myData.txt",raw_ascii);
-
+  cout << myData;
   CLP myCLP(myData, NPARAM, NVERTEX);
   myCLP.setParam(myParam);
  
-  int maxSearch = 100;
-  int maxMC = 100;
+  int maxSearch = atoi(argv[3]);
+  int maxMC = atoi(argv[4]);
 
   mat SaveME(maxSearch,NVERTEX);
   for(int i=0;i < maxSearch; ++i){
