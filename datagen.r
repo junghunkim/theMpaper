@@ -3,11 +3,11 @@ source("simulator.r")
 
 maxTime = 1
 nstep = 100
-nvertex = 25
+nvertex = 10
 
 myunitRate = 1
-myPsi.C1 = rep(c(1,-1,0.3),15)
-myPsi.C2 = rep(c(1,-1,0.8),10)
+myPsi.C1 = rep(c(1,-1,0.2),5)
+myPsi.C2 = rep(c(1,-1,0.9),5)
 myPsi = c(myPsi.C1,myPsi.C2)
 myPsi = matrix(myPsi,byrow=T,nrow=nvertex)
 

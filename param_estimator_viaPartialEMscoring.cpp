@@ -40,6 +40,7 @@ colvec CLP::getMeans(int maxMC){
   mat cur_sim;
 
   for(int mc_itr = 0; mc_itr < maxMC; ++mc_itr){
+    cout << "\t MC#= "<< mc_itr << endl;
     cur_sim = rejSimulator();
     retVec = retVec + mean(cur_sim.rows(0,nvertex-1),1);
   }
@@ -170,8 +171,8 @@ mat CLP::rejSimulator(){
 }
 
 int main() {
-  const int NVERTEX_Normal = 15;
-  const int NVERTEX_Abnorm = 10;
+  const int NVERTEX_Normal = 5;
+  const int NVERTEX_Abnorm = 5;
   const int NVERTEX = NVERTEX_Normal + NVERTEX_Abnorm;
   const int NPARAM = 3;
 
@@ -196,15 +197,15 @@ int main() {
   CLP myCLP(myData, NPARAM, NVERTEX);
   myCLP.setParam(myParam);
   
-  int maxSearch = 1;
+  int maxSearch = 100;
   int maxMC = 100;
 
   mat SaveME(maxSearch,NVERTEX);
   for(int i=0;i < maxSearch; ++i){
+    cout << "Search #" << i << endl;
     myParam.col(0) = myCLP.getMeans(maxMC);
     myCLP.setParam(myParam);
     SaveME.row(i) = reshape(myParam.col(0),1,NVERTEX);
-    cout << "Search #" << i << endl;
     cout << reshape(myParam.col(0),1,NVERTEX) << endl;
   }
   SaveME.save("SIMOUT.mat",raw_ascii);
