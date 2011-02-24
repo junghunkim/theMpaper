@@ -1,7 +1,10 @@
 #include <iostream>
 #include <cmath>   
 #include <armadillo>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 using namespace std;
 using namespace arma;
 
@@ -198,21 +201,27 @@ mat CLP::rejSimulator(){
   return(retOBJ);
 }
 
-int main() {
-  const int NVERTEX_Normal = 2;
-  const int NVERTEX_Abnorm = 2;
-  const int NVERTEX = NVERTEX_Normal + NVERTEX_Abnorm;
-  const int NPARAM = 3;
+int main(int argc, char **argv) {
+  // const int NVERTEX_Normal = 2;
+  // const int NVERTEX_Abnorm = 2;
+  int NVERTEX = atoi(argv[1]);
+  int NPARAM = atoi(argv[2]);
 
-  mat normal_vertex_param(NVERTEX_Normal, NPARAM);
-  mat abnorm_vertex_param(NVERTEX_Abnorm, NPARAM);
+  // mat normal_vertex_param(NVERTEX_Normal, NPARAM);
+  // mat abnorm_vertex_param(NVERTEX_Abnorm, NPARAM);
   mat myParam(NVERTEX,NPARAM);
-
-  normal_vertex_param << 0.5 << -1 << 1 << endr << 0.5 << -1 << 1 << endr;
-  abnorm_vertex_param << 0.5 << -1 << 1 << endr << 0.5 << -1 << 1 << endr;
-  cout << "Test 1" << endl;
   
-  myParam = join_cols(normal_vertex_param,abnorm_vertex_param);
+  mat tmpmat;
+  tmpmat.load("SIMIN.mat", raw_ascii);
+  myParam.col(0) = trans(tmpmat.row(tmpmat.n_rows - 1));
+  myParam.col(1) = ones(NVERTEX)*(-1);
+  myParam.col(2) = ones(NVERTEX);
+  
+  // normal_vertex_param << 0.5 << -1 << 1 << endr << 0.5 << -1 << 1 << endr;
+  // abnorm_vertex_param << 0.5 << -1 << 1 << endr << 0.5 << -1 << 1 << endr;
+  // cout << "Test 1" << endl;
+  
+  // myParam = join_cols(normal_vertex_param,abnorm_vertex_param);
   //  cout << "Test 2" << endl;
   mat myData;
   myData.load("myData.txt",raw_ascii);
@@ -222,13 +231,18 @@ int main() {
   
   myCLP.setParam(myParam);
   //  cout << "Test 5" << endl;
-  int maxSearch = 1;
-  int maxMC = 1;
+  int maxSearch = 100;
+  int maxMC = 100;
+
+  mat SaveME(maxSearch,NVERTEX);
   for(int i=0;i < maxSearch; ++i){
-    myParam(0, span::all) = myCLP.getMeans(maxMC);
-    //    cout << "Test 6" << endl;
+    cout << "Search #" << i << endl;
+    myParam.col(0) = myCLP.getMeans(maxMC);
     myCLP.setParam(myParam);
+    SaveME.row(i) = reshape(myParam.col(0),1,NVERTEX);
+    cout << reshape(myParam.col(0),1,NVERTEX) << endl;
   }
-  cout << myParam;
+  SaveME.save("SIMOUT.mat",raw_ascii);
+
   return 0;
 }
