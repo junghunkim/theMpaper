@@ -52,6 +52,7 @@ ts.TKVs.all = ts.TKVs[order(ts.TKVs[,1]),]
 ts.TKVs.obs = ts.TKVs.all[ts.TKVs.all[,2]>0,]
 
 outOBJ = ts.TKVs.obs[,c(1,(3:(2+nvertex)),2)]
+<<<<<<< HEAD
 write.table(outOBJ,filename,sep=" ",col.names=F,row.names=F);
 
 
@@ -100,3 +101,4 @@ write.table(outOBJ,filename,sep=" ",col.names=F,row.names=F);
 #
 #save(file="mydata.RData")
 #
+
