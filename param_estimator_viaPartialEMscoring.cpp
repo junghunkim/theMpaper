@@ -18,6 +18,7 @@ private:
   const int nmessages;
 
   mat Param;
+  //mat Param_Poisson;
   const colvec Data_t;
   const colvec Data_k;
   const mat Data_v;
@@ -46,6 +47,12 @@ colvec CLP::getMeans(int maxMC){
     cout << "\t MC#= "<< mc_itr << endl;
     cur_sim = rejSimulator();
     retVec = retVec + mean(cur_sim.rows(0,nvertex-1),1);
+//	retLambda = retLambda + nmessages
+// for(int i =0; i<nvertex-1;i++){
+//	for(int j=(i+1); j <nvertex;j++) {
+//		tempLamba = sum(row_i * row_j + row_i_c + row_j_c) * dT
+//	}
+//}
   }
   retVec = retVec/maxMC;
   return(retVec);
