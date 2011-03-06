@@ -1,3 +1,5 @@
 *.aux
 *.log
+*.tex
+*.pdf
 .Rhistory

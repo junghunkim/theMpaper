@@ -47,7 +47,7 @@ colvec CLP::getEST(int maxMC){
   mat cur_sim;
 
   for(int mc_itr = 0; mc_itr < maxMC; ++mc_itr){
-    cout << "\t MC#= "<< mc_itr << endl;
+    cout << "\tMC # == "<< mc_itr << "/" << maxMC-1 << endl;
     cur_sim = rejSimulator();
 
     Ts = trans(cur_sim.row(nvertex));
@@ -55,7 +55,6 @@ colvec CLP::getEST(int maxMC){
     dT = zeros<colvec>(Ts.n_elem);
     for(int itr =1; itr < Ts.n_elem;++itr){
       dT(itr) = Ts(itr) - Ts(itr-1);
-      cout << "HERE" << itr << endl;
     }
 
     
@@ -65,7 +64,6 @@ colvec CLP::getEST(int maxMC){
       for(int j=(i+1);j <nvertex;j++) {
 	row_i = trans(cur_sim.row(i));
 	row_j = trans(cur_sim.row(j));
-	cout <<"HERE"<<endl;        
 	retSca = retSca + sum((row_i % row_j + (1-row_i) % (1-row_j)) % dT)/nmessages;
       }
     }
@@ -182,7 +180,6 @@ mat CLP::rejSimulator(){
 	  }
 
 	  mystop_prob = mystop_prob + log(weight);
-
 	  mystop_prob = mystop_prob - Rate(0,0)*mean(path_ij_rate_sum)*(myRHS_cur-myLHS_cur);
 	 
 	} // j>i for-ends
@@ -218,6 +215,7 @@ int main(int argc, char **argv) {
   mat myRate(1,1);
   
   mat SIMIN;
+
   SIMIN.load("SIMIN.mat", raw_ascii);
   myParam.col(0) = trans(SIMIN(SIMIN.n_rows - 1, span(0,NVERTEX-1)));
   myParam.col(1) = ones(NVERTEX)*(-1);
@@ -227,9 +225,9 @@ int main(int argc, char **argv) {
   mat myData;
   myData.load("myData.txt",raw_ascii);
 
-  cout << myData <<endl;
-  cout << myParam << endl;
-  cout << myRate << endl;
+  //cout << myData <<endl;
+  //cout << myParam << endl;
+  //cout << myRate << endl;
 
   CLP myCLP(myData, NPARAM, NVERTEX);
   myCLP.setParam(myParam);
@@ -239,10 +237,9 @@ int main(int argc, char **argv) {
   mat myITRresult; 
   
   for(int i=0;i < maxSearch; ++i){
-    cout << "Search #" << i << endl;
+    cout << "Search # == " << i << "/" << maxSearch-1 << endl;
 
     myITRresult = myCLP.getEST(maxMC);    
-
 
     myParam.col(0) = myITRresult(span(0,NVERTEX-1),0);
     myCLP.setParam(myParam);
