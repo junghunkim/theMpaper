@@ -252,7 +252,7 @@ int main(int argc, char **argv) {
     cout << SaveME.row(i) << endl;
   }
   
-  SaveME.save("SIMOUT.mat",raw_ascii);
+//  SaveME.save("SIMOUT.mat",raw_ascii);
   
   return 0;
 }
