@@ -188,7 +188,7 @@ mat CLP::rejSimulator(){
       } // i for-ends
       //
       // now the decision time
-      if(rejcount > 5000 || as_scalar(log(randu(1))) < mystop_prob) {
+      if(rejcount > 500 || as_scalar(log(randu(1))) < mystop_prob) {
 	do_more = false;
 	myINIT_cur = State_VX_prop.col(myRHS_index);	
 	retSTATE = join_rows(retSTATE,State_VX_prop.cols(1,myRHS_index));
