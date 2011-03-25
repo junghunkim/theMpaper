@@ -58,55 +58,109 @@ a doubly stocastic Poisson process that whose intensity process is
 \Lambda_{ij}(t) = \lambda_i \lambda_j (X_{i,1}(t)X_{j,1}(t) + X_{i,2}(t)X_{j,2}(t)).
 \end{eqnarray}
 A particularly useful chracterization is to describe each $N_{ij}$ as a process obtained 
-by thinning a homogeneous Poisson process $M_{ij}$ whose constant intensity is $\lambda_i \lambda_j$.  
-This affords an interpretation that each $t$ such that $M_{ij}(t) = M_{ij}(t-) +1$ 
+by thinning a homogeneous Poisson process $C_{ij}$ whose constant intensity is $\lambda_i \lambda_j$.  
+This affords an interpretation that each $t$ such that $C_{ij}(t) = C_{ij}(t-) +1$ 
 is a potential communication opportunity between vertex $i$ and vertex $j$, 
 and at each such $t$, depending on values of $X_i(t)$ and $X_j(t)$, 
 the opportunity may or may not give rise to an actual communication event, i.e.\ $t$ such that $N_{ij}(t) = N_{ij}(t-) +1$. To be more precise, it is our assumption that given the filtration 
 $$
 \mathcal F_{ij}^\Lambda(t) = \sigma(\Lambda_i(s), \Lambda_j(t): s \le t), 
 $$
-if $M_{ij}(t) = M_{ij}(t-)+1$, then
+if $C_{ij}(t) = C_{ij}(t-)+1$, then
 $N_{ij}(t) = N_{ij}(t-) + 1$ with probability $\Lambda_{ij}(t)$ and the topic mark is of content class $k$ with probaiblity 
 $$
 \frac{X_{i,k}(t)X_{j,k}(t)}{X_{i,1}(t)X_{j,1}(t) + X_{i,2}(t)X_{j,2}(t)}
 =
 \frac{\Lambda_{i,k}(t)\Lambda_{j,k}(t)}{\Lambda_{i,1}(t)\Lambda_{j,1}(t) + \Lambda_{i,2}(t)\Lambda_{j,2}(t)}.
 $$
-Now, we fix a collection of independent standard Brownian motions $B_1,\ldots,B_n$, strictly positive constants $\sigma_1,\ldots, \sigma_n$ and $\mu_1,\ldots, \mu_n$, and assume that  
-each $Y_i=(Y_i(t):t\in [0,1])$ is a mean-reverting diffusion process such that 
+Now, we fix a stationary diffusion process $Y_i=(Y_i(t):t\in [0,1])$ such that  
 \begin{eqnarray}
-dY_i(t) = (\mu_i - Y_i(t)) dt + \sigma_i dB_i(t). 
+dY_i(t) = \mu(Y_t(t)) dt + \sigma_i(Y_i(t)) dB_i(t),
 \end{eqnarray}
-Finally, we assume that 
+where each $\mu_i$ and $\sigma_i$ are twice continuously and boundedly differentiable functions, and $B_1,\ldots,B_n$ are independent standard Brownian motions.
+In fact, in this paper, for concreteness, we assume that 
 \begin{eqnarray}
-X_{i,1}(t) = \frac{\exp(-Y_i(t))}{1+\exp(-Y_i(t))}.
+dY_i(t) = \beta_i (\mu_i - Y_i(t)) dt + \sigma_i dB_i(t),
 \end{eqnarray}
-
-\section{Likelihood function}
-It can be shown that
+for some fixed constants $\mu_1,\ldots, \mu_n \in \mathbb R$, and $\sigma_1 = \ldots = \sigma_n \in (0,\infty)$ and $\beta_1 = \ldots = \beta_n \in (0,\infty)$. 
+Then, we assume that 
 \begin{eqnarray}
-&\ &\log (f(X_{i,1}(t);\psi))\\
-&= & \frac{\mu_i}{\sigma_i} (Y_{i}(1) - Y_{i}(1)) - \frac{1}{2} (Y_{i}^2(1) - Y_i^2(0)) - \frac{1}{2} \int_0^1 (\mu_i-Y_{i}(t))^2 - 1 dt. 
+X_{i,1}(t) = \frac{\exp(-Y_i(t)}{1+\exp(-Y_i(t))}.
+\end{eqnarray}
+While we could also take $\sigma_1,\ldots,\sigma_n$ and $\beta_1,\ldots, \beta_n$ to be parameters, 
+but for our vertex nomination problem or more generally classification problem, 
+these potential paramters are (perhaps) nuisance parameters (?).  
+In our algorithm, we propose to fix the nusiance parameters before proceding to a classification/vertex notimation task.
+Finally, for future reference, we let
+$$
+\psi = (\mu_1,\ldots, \mu_n,\lambda_1,\ldots,\lambda_n).
+$$
+
+\section{Greedy algorithm for iterative vertex nomination}
+ 
+Our main result of this paper concerns an algorithm 
+for correctly assigning each vertex into one of two classes, where witnin each group, all the members  
+have the same parameter i.e.\ if vertex $i$ and vertex $j$ are in the same
+class, then $\psi_i = \psi_j$.  
+In this section, we provide a greedy algorithm for arriving at a partition 
+of the vertex set which is likely to be the true partition of 
+the vertex set that  have produced the data $\mathcal D$.
+
+For the initial step $q=1$, suppose that we have 
+an arbitrary partition $(C_1(1), C_2(1))$ of $\{1,\ldots, n\}$. 
+Let $\psi^1$ be the output of our EM algorithm, where we assume that within each group,
+all vertice have the same paramter.  Then, for each pair $i, j \in C_k(1)$, $\psi_i^1 = \psi_j^1$.  
+Let
+\begin{eqnarray}
+Q(1) : = \mathbf E_{\psi(1)}\left[\log(f(\mathcal D, Y;\psi^1))\right],
+\end{eqnarray}
+where $f(;\psi)$ denote the likelikehood function of observing $\mathcal D$ and $Y$ with the given parameter $\psi$ (see the next section for more details about this). 
+Next, for the $(r+1)$-st iteration, suppose that we have a partition $(C_1(r), C_2(r))$ from the $r$-th iteration. 
+If $C_2(r) = \varnothing$, then our partitioning algorithm terminates, yielding the $r$-th partition 
+$(C_1(r), C_2(r))$ as the final output.  So, we assume that $C_2(r)\neq \varnothing$.  Then, for some $\ell > 0$ and $m > 0$ with $\ell + m = n$, we have 
+\begin{eqnarray}
+&C_1(r) = \{u_1,\ldots, u_\ell\},\\
+&C_2(r) = \{v_1,\ldots, v_m\}.
+\end{eqnarray} 
+For each $i \in C_2(r)$, let 
+\begin{eqnarray}
+&C_1^{i}(r) = C_1(r) \cup \{i\}, \\
+&C_2^{i}(r) = C_2(r) \setminus \{i\}.
+\end{eqnarray}
+Now, for each $i$, let $\psi^{i,r}$ be the EM estimate of $\psi$ with the partition $(C_1^{i}(r), C_2^{i}(r))$, and let 
+\begin{eqnarray}
+Q^{i}(r) = \mathbf E_{\psi^{i,r}}\left[\log(f(\mathcal D,Y;\psi^{i,r}))\right].
+\end{eqnarray}
+If for all $i \in C_2(r)$, $Q^{i}(r) \le Q(r)$, then the algorithm terminates, yielding 
+$(C_1(r), C_2(r))$ as the final partitioning.  Otherwise, we set 
+\begin{eqnarray}
+i^* = \arg\max_{i \in C_2(r)} Q^{i}(r),
+\end{eqnarray}
+and let 
+\begin{eqnarray}
+&C_1(r+1) = C_1(r) \cup \{i^*\},\\
+&C_2(r+1) = C_2(r) \setminus \{i^*\}.
 \end{eqnarray}
 
 
 
+\section{Estimation by EM procedure}
+\subsection{Overview}
 Let
 \begin{enumerate}
 \item[(i)] $M_{ij}$ is the (total) number of messages between vertex $i$ and vertex $j$,
-\item[(2)] $\tau_{ij}(\ell)$ is the time at which occurred the $\ell$-th communication event 
-between vertex $i$ and vertex $j$.
+\item[(2)] $\tau_{ij}(\ell)$ is the time at which occurred the $\ell$-th communication event  between vertex $i$ and vertex $j$.
 \end{enumerate}
-The (full) likelihood function to be used in the expectation stage of our EM algorithm takes the following form:
+In the expectation stage of our EM algorithm, for each $\psi$, we compute the expected value of the following random variable:
 \begin{eqnarray}
-\prod_{i<j} f_{ij}(\mathcal M(ij);X_i,X_j,\Psi) \prod_{i=1}^n f_{[0,T],i}(X_i;\Psi),
+\prod_{i<j} f_{ij}(\mathcal D(ij);X_i^r,X_j^r,\psi) \prod_{i=1}^n f_{i}(Y_i^r;\psi),
 \end{eqnarray}
 where 
 \begin{enumerate}
-\item[(1)] $f_{[0,T],i}(\cdot;\Psi)$ is the likelihood function of the $i$-th vertex 
-process' sample path (for the interval $[0,T]$),
-\item[(2)] $f_{ij}(\cdot;X_i,X_j,\Psi)$ is the likelidhood of 
+\item[(i)] $Y_i^r$ is a diffusion process whose distribution is a conditional distribution of $Y_i$ given the observation $\mathcal D$ with the unconditional distribution of $Y_i$ for the $r$-th estimated parameter $\psi^r$,
+\item[(ii)] $f_{i}(\cdot;\psi)$ is the likelihood of the $i$-th vertex 
+process' sample path $Y_i$ with the parameter $\psi$,
+\item[(iii)] $f_{ij}(\cdot;X_i^r,X_j^r,\psi)$ specifies the conditional likelidhood given $X_1^r,\ldots,X_n^r$ of 
 observing message at time 
 $$
 \tau_{ij}(1),\ldots, \tau_{ij}(M_{ij}),
@@ -117,369 +171,63 @@ $$
 $$
 \end{enumerate}
 
-First, conditioning on the path of $X_i$ and $X_j$, and given the value of $\lambda$,   
-the value of $f_{ij}(\cdot;X_i,X_j,\Psi)$ can be seen to be
+   
+Note that conditioning on the path of $Y_i$ and $Y_j$ (but not on $\mathcal D)$, and given the value of $\psi$, the value of $f_{ij}(\cdot;X_i,X_j,\psi)$ can be seen to be
 \begin{eqnarray}\label{formula2010.12.19.12.31.pm}
-\prod_{i<j} \prod_{\ell=1}^{M_{ij}} \Lambda_{\kappa_{ij}(\ell)}(X_i(\tau_{ij}(\ell)),X_j(\tau_{ij}(\ell)) \exp\left(-\int_0^T \Lambda(X_i(s),X_j(s)) ds\right).
+\prod_{i<j} \left(\prod_{\ell=1}^{M_{ij}} \Lambda_{i,\kappa_{ij}(\ell)}(\tau_{ij}(\ell))\Lambda_{j,\kappa_{ij}(\ell)}(\tau_{ij}(\ell))\right) \exp\left(-\int_0^T \Lambda_{ij}(s) ds\right).
 \end{eqnarray}
-Next, given the value of $\Psi$, the likelihood of the sample path of $X_i$ can be 
-seen to satisfy:
-\begin{eqnarray}\label{formula2010.12.19.01.07.pm}
-\log(f_{[0,T],i}(X_i)) 
-=
-a(h(X_T)) - a(h(X_0)) 
--\frac{1}{2} \int_0^T \mu^2(h(X_t)) +\mu^\prime(h(X_t)) dt,
-\end{eqnarray}
-where 
-\begin{eqnarray}
-&h(x) = \frac{1}{\sigma} \arcsin(2x - 1),\\
-&\mu(y) = \left(\frac{\beta}{\sigma} + \frac{\sigma}{2}\right) \tan(\sigma y)
-+\frac{\beta(1-2\gamma)}{\sigma} \frac{1}{\cos(\sigma y)},\\
-&a(y) = - \left(\frac{\beta}{\sigma^2}+\frac{1}{2}\right) \log(\cos(\sigma y))
-+ \frac{\beta (1-2\gamma)}{2\sigma^2} \log\left(\frac{1+\sin(\sigma y)}{1-\sin(\sigma y)}\right),\\
-&\mu^\prime(y) = 
-(\beta+ \sigma^2/2) \frac{1}{\cos^2(\sigma y)} + \beta (1-2\gamma) \frac{\sin(\sigma y)}{\cos^2(\sigma y)}. 
-\end{eqnarray}
-Without going into all the details, we will briefly outline the elements of 
-deriving these formulae displayed above.  
-
-
-To see the formula in (\ref{formula2010.12.19.12.31.pm}), first recall the (general) fact that 
-conditioning a intensity function $r(t)$ of an inhomogeneous Poisson process,
-the likelihood for observing events at times $t_1,\ldots, t_M$ during interval $[0,T]$
-is given by
-\begin{eqnarray}
-r(t_1)\cdots r(t_M) \exp\left(-\int_0^{T} r(s) ds\right),
-\end{eqnarray}
-and the fact for our (general) model that 
-given that there were a communication event between vertex $i$ and vertex $j$ at time $t$,
-the chance that the event is about topic $1$ is 
-\begin{eqnarray}
-\frac{X_i(t)X_j(t)}{\Lambda(X_i(t),X_j(t))} 
-\end{eqnarray}
-and the chance that event is about topic $2$ is 
-\begin{eqnarray}
-1-\frac{X_i(t)X_j(t)}{\Lambda(X_i(t),X_j(t))} 
-=
-\frac{(1-X_i(t))(1-X_j(t))}{\Lambda(X_i(t),X_j(t))}.
-\end{eqnarray}
-Combining these facts, one sees (\ref{formula2010.12.19.12.31.pm}). 
-
-Next, let $\mathcal C$ be the set of all functions from $[0,T]$ to $\mathbb R$, and 
-we equip the space $C$ with the usual $\sigma$-algebra generated by the cylinder sets. 
-In (\ref{formula2010.12.19.01.07.pm}), 
-each $f_{[0,T],i}$ is the Radon-Nykodim derivative of the probability measure induced by $X_i$ 
-on $\mathcal C$ against the measure induced on $\mathcal C$ by the standard Brownian motion. 
-To get the density $f_{[0,T],i}$, we follow the standard technique in which 
-first, the ornigal diffusion is transformed to another diffusion whose
-diffusion term is not state-dependent and, then apply Girsanov's theorem to obtain
-the likelihood ratio formula, which is $f_{[0,T],i}$ above.  More details for these calculations 
-will be presented in a later section, but also, a reader might find Michael Sorenson's 
-paper useful. 
-
-
-In this section, we prove that our EM procedure is well-posed under
-a mild condition.  In other words, for each iteration of the EM algorithm,
-a solution to the optimization problem in the M step exists and is unique.
-To do this, we begin by providing the details 
-of deriving the full likelihood function. This requires a popular techinque
-in dealing with a Ito (diffusion) process, where after a one-to-one trasnformation, the process becomes another Ito process whose diffusion term is simply a standard Brownian motion.
-
-To begin, for each vertex $i$, let
-\begin{eqnarray}
-h_i(x) = \frac{1}{\sigma_i}\arcsin(2x-1) = \int \frac{1}{\sigma_i\sqrt{x-x^2}}dx.
-\end{eqnarray}
-Note that each $h_i$ is one-to-one (cf.\ Lamperti transformation) and let
-\begin{eqnarray}
-H_i(t) = \frac{1}{\sigma_i}\arcsin(2X_i(t)-1).
-\end{eqnarray}
-Then, an application of Ito's formula yields:
-\begin{eqnarray}
-dH_i(t) = \mu_i(H_i(t);\psi) dt + dW_i(t),
-\end{eqnarray}
-where
+Next, given $\sigma_i=1$ and $\beta_i=1$ for all $i=1,\ldots, n$, 
+it can be shown that
 \begin{eqnarray*}
-&\ & \mu_i(H_i(t);\psi) \\
-%&=& \frac{b_i(X_i(t);\psi)}{\sigma_i(X_i(t);\psi)} - \frac{1}{2} \sigma_i^\prime(X_i(t);\psi)\\
-&=& \frac{\beta_i}{\sigma_i} \frac{X_i(t)-\gamma_i}{\sqrt{X_i(t)-X_i^2(t)}}
--  \frac{1}{2} \frac{\sigma_i/2 (1-2X_i(t))}{\sqrt{X_i(t) - X_i^2(t)}}.%\\
+&\ &\log (f_i(Y_{i}^r(t);\psi))\\
+&= & \mu_i (Y_{i}^r(1) - Y_{i}^r(0)) - \frac{1}{2} ((Y_{i}^r(1))^2 - (Y_i^r(0))^2) - \frac{1}{2} \int_0^1 (\mu_i-Y_{i}^r(t))^2 - 1 dt. 
 \end{eqnarray*}
-Next, for each $\psi \in \Psi$, let $P_\psi$ be the probability distribution induced by $H = (H_1,\ldots, H_n)$ on $(C\times\cdots\times C,\ldots, \mathcal C\times\cdots\times \mathcal C)$, and note that by the Girsanov theorem and Ito's formula,  
-one can obtain the following Radon-Nykodym density:
-\begin{eqnarray*}
-\frac{dP_{\psi}}{dQ}(H)
-&= &
-\prod_{i=1}^n \exp\left(
-\int_0^T \mu_i(H_i(t);\psi)dH_i(t)
+
+
+Now we remark here that while unconditionally, the diffusion processes $Y_1,\ldots, Y_n$ are independent, 
+conditionally, $Y_1,\ldots,Y_n$ need not be independent.  
+Computing the exact conditionally likelihood of $Y_i^r$ analytically is difficult if not practically impossible 
+even for the relatively simple diffusion process $Y_1,\ldots,Y_n$ that we are considering in this paper. 
+Because of this, our algorithm relies instead on an EM algorithm in where the expected value in the E step 
+is estimated by simulation and in the M step, the maximization is done numerically.     
+An except to this arises if we set the nusiance parameter $\sigma_1 = \ldots = \sigma_n = 0$.
+In this case, each $Y_i^r = \mu_i$ and it is not difficult to see that the MLE of $\psi$ given $\mathcal D$ 
+satisfies the following equations:
+\begin{eqnarray}
+\frac{1}{\lambda_i} \left(\sum_{j\neq i} M_{ij}\right)  -  \sum_{j\neq i} \lambda_j (2 X_i X_j + 1 - X_i - X_j) = 0,
+\end{eqnarray}
+\begin{eqnarray}
+\frac{1}{X_{i,1}} \left(\sum_{j\neq i} M_{ij,1}\right)  + \frac{1}{1-X_{j,1}} \sum_{j\neq i} M_{ij,2} 
 -
-\frac{1}{2} \int_0^T \mu_i^2(H_i(t);\psi)dt\right)\\
-&= &
-\prod_{i=1}^n \exp\left(
-a_i(\sigma H_i(T);\psi) - a_i(\sigma H_i(0);\psi)
--\frac{1}{2} \int_0^T \mu_i^2(H_i(t);\psi) + \mu_i^\prime(H_i(t);\psi) dt\right),
-\end{eqnarray*}
-where
-\begin{eqnarray*}
-a_i(x;\psi) = \int \mu_i(x;\psi) dx.
-\end{eqnarray*}
-Now, it can be shown that:
-\begin{eqnarray*}
-&\ &a_i(\sigma H_i(t);\psi)  \\
-%&= &
-%\left(\frac{\beta_i}{\sigma_i} + \sigma_i/2\right)
-%\frac{1}{\sigma_i}\log( \sec(\sigma_i H_i(t)) )
-%+
-%\frac{-\beta_i}{\sigma_i} (1-2\gamma_i) \frac{1}{\sigma_i}
-%(\log( \sec(\sigma_i H_i(t)) + \tan(\sigma_i H_i(t))))\\
-%&= &
-%\left(\frac{\beta_i}{\sigma_i^2} + 1/2\right)
-%\log( \sec(\sigma_i H_i(t)) )
-%+
-%\frac{-\beta_i}{\sigma_i^2} (1-2\gamma_i)
-%\left(\log( \sec(\sigma_i H_i(t)) + \tan(\sigma_i H_i(t)))\right)\\
-&= &
-\left(\frac{\beta_i}{\sigma_i^2} + 1/2\right)
-\log\left( \frac{1}{2\sqrt{X_i(t) - X_i^2(t)}} \right)
-+
-\frac{-\beta_i}{\sigma_i^2} (1-2\gamma_i)
-\log\left( \frac{X_i(t)}{\sqrt{X_i(t) - X_i^2(t)}} \right),
-\end{eqnarray*}
-and
-\begin{eqnarray*}
-&\ & \mu_i^\prime(\sigma_i H_i(t);\psi) \\
-%&= & \left(\frac{\beta_i}{\sigma_i} + {\sigma_i}/2\right)
-%\sigma_i
-%\sec^2(\sigma_i H_i(t))
-%+
-%\frac{-\beta_i}{\sigma_i} (1-2\gamma_i)
-%\sigma_i \sec(\sigma_i H_i(t)) \tan(\sigma_i H_i(t))\\
-%&= & \left(\beta_i + {\sigma_i^2}/2\right)
-%\sec^2(\sigma_i H_i(t))
-%+
-%\frac{-\beta_i}{\sigma_i} (1-2\gamma_i)
-%\sec(\sigma_i H_i(t)) \tan(\sigma_i H_i(t))\\
-&= &
-\left(\beta_i + {\sigma_i^2}/2\right)
-\frac{1}{\left(2\sqrt{X_i(t) - X_i^2(t)}\right)^2}
-+
-\frac{-\beta_i}{\sigma_i} (1-2\gamma_i)
-\frac{2X_i(t)-1}{\left(2\sqrt{X_i(t) - X_i^2(t)}\right)^2}.
-\end{eqnarray*}
-Then, the likelihood $f_{[0,T]}(\mathcal M,H;\Psi)$ of $(\mathcal M,H)$ for the interval $[0,T]$ equals
-\begin{eqnarray*}
-&\ & \prod_{i<j} \left( \exp\left(-\int_0^{T} \Lambda_{ij}(s)ds\right) \prod_{\ell=1}^{M_{ij}}\Lambda_{ij,\kappa_\ell(ij)}(\tau_\ell(ij))\right)\\
-&\ & \ \ \cdot
-\prod_{i=1}^n \exp\left(
-\left. a_i(H_i(t);\Psi) \right|_{t=0}^{t=T}-\frac{1}{2} \int_0^T \mu_i^2(H_i(t);\Psi) + \mu_i^\prime(H_i(t),\Psi) dt\right).
-\end{eqnarray*}
-
-In the $\ell$-th iteration of our EM algorithm, we have the current estimate $\Psi_\ell$.  For each $\Psi$, let
-\begin{eqnarray}
-Q_{\ell}(\Psi) = \mathbf E_{\ell}
-\left[
-\log f_{[0,T]}(X,\mathcal M;\Psi)
-\right],
-\end{eqnarray}
-where the expectation $\mathbf E_\ell$ is taken conditionally on $\mathcal M$ with the underlying parameter $\Psi_\ell$. Then, we obtain our next (improved) estimate $\Psi_{\ell+1}$ by finding the location of the maximum of the function $Q_{\ell}$.
-
-We now find an analytic formula for $Q_\ell$ explicit in terms of parameter $\Psi$. 
-To do this, we first let:
-\begin{eqnarray*}
-Q_{\ell,0}(\Psi) 
-&=& -\lambda_\ell \left( \sum_{i<j} \int_0^T \langle \overline{\Lambda}_{ij}(s)\rangle ds\right)\\
-& & + \left(\sum_{i<j} \sum_{m=1}^{M_{ij}} \log(\lambda_\ell) \right)\\
-& & + \left( \sum_{ij} \sum_{m=1}^{M_{ij}} \langle \log \overline \Lambda_{ij,\kappa_{m}(ij)}(\tau_m(ij))\rangle \right)
-\end{eqnarray*}
-
-\begin{eqnarray*}
-Q_{\ell,1}(\Psi) 
-&=& \sum_{i=1}^n \left(\frac{\beta_i}{\sigma_i^2} + \frac{1}{2}\right) \langle A_i(T) - A_i(0) \rangle_\ell \\
-&\ & +   \sum_{i=1}^n \left(-\frac{\beta_i}{\sigma_i^2} - 2\gamma_i\right)\langle B_i(T) - B_i(0) \rangle_\ell. 
-\end{eqnarray*}
-
-
-\begin{eqnarray*}
-Q_{\ell,2}(\Psi) &=& \sum_{i=1}^n \left(\frac{\beta_i}{\sigma_i} + \frac{\sigma_i}{2}\right)^2 \int_0^T \langle E_i(t)\rangle_\ell dt  \\
-&\ & + \left( \frac{\beta_i \gamma_i}{\sigma_i} + \frac{\sigma_i}{4}\right)^2
-\int_0^T \langle F_i(t)\rangle_\ell dt  \\
-&\ & + 
-\left(\frac{\beta_i}{\sigma_i} + \frac{\sigma_i}{2}\right)
-\left(-\frac{\beta \gamma_i}{\sigma_i} - \frac{\sigma_i}{4}\right)
-\int_0^T \langle G_i(t) \rangle_\ell dt.
-\end{eqnarray*}
-
-\begin{eqnarray*}
-Q_{\ell,3}(\Psi) &=& \sum_{i=1}^n \left( \beta_i + \frac{\sigma_i^2}{2}\right) \int_0^T \langle C_i(t) \rangle_\ell dt\\
-&\ & + \sum_{i=1}^n \left(-\frac{\beta_i}{\sigma_i} (1-2\gamma_i) \right) \int_0^T \langle D_i(t) \rangle_\ell dt. 
-\end{eqnarray*}
-
-Note that 
-\begin{eqnarray}
-Q_\ell(\Psi) = 
-Q_{\ell,0}(\Psi)+
-Q_{\ell,1}(\Psi)+
-Q_{\ell,2}(\Psi)+
-Q_{\ell,3}(\Psi).
-\end{eqnarray}
-and each term $Q_{\ell,k}$ is a polynomial whose degree is at most two in each letter in $\Psi$.
-In particular, the partial derivate of $Q_\ell$ with respect to each letter in $\Psi$ yields a linear equation and as a necessary condition for a unique optimizer existing in the interior of the parameter space for $\Psi$ is that existence of a unique solution to a system of linear equations. Also, recall that we require for each vertex $i$ that 
-\begin{eqnarray}
-&\beta_i \in (-\infty,0), \\
-&\sigma_i \in (0,\infty), \\
-&\gamma_i \in (0,1).
+\lambda_i \sum_{j\neq i}  \lambda_j (2 X_{i,j} - 1) =0.
 \end{eqnarray}
 
-
-\subsection{Random dot product \& Jacobi processes}
-
-For this, we begin by associating each vertex pair with a marked point process whose 
-event occurrence and event marking are based on the latent state of the two vertice. 
-More specifically, we augment the data $\mathcal M$ with 
-the continuous-time (latent) state processes $\mathcal X = (X_1,\ldots, X_n)$ of $n$ vertice,
-each taking values in a Polish space and with $n(n-1)/2$ homogeneous Poisson processes 
-$\mathcal H= \{H_{ij} : 1 \le i < j \le n\}$.  
-
-Here, each $X_i(t)$ represents the (latent) state of vertex $i$ at time $t$,
-and each $H_{ij}(t)$ represents the total number of (potential) opportunities
-that vertex $i$ and vertex $j$ could have exchanged a message (by time $t$).  
-Then, the augmentating data $(\mathcal X, \mathcal H)$ and 
-the augmented data $\mathcal M$ are associated by assuming that 
-each $N_{ij}$ is obtained by  thinning each $H_{ij}$ using $X_i$ and $X_j$ 
-
-We will also assume that each $X_i$ is a continuous-time strong Markov process 
-such that its probability density with respect to the standard Brownian motion
-exists.  
-Now, fix a non-negative bounded Borel measurable function $\Lambda$ taking values in $\mathbb R_+$ such that $\Lambda(x,y) = \Lambda(y,x)$, and let
-\begin{eqnarray}
-\lambda = \sup_{x,y} \Lambda(x,y).
-\end{eqnarray}
-Then, we also assume that each $N_{ij}$ is a doubly stochastic Poisson process whose intensity at $t$  is 
-$\Lambda(X_i(t),X_j(t))$.  
-In particular, (conditioning on $X_i$ and $X_j$), $N_{ij}$ is obtained from $H_{ij}$ by independently deleting each occurrence (of potential messaging opportunity) in $H_{ij}$ with probability equaling the value of $1-\Lambda_{ij}(\cdot)/\|\Lambda_{ij}\|_\infty$ at the occurrence time of the event (messaging opportunity). 
-Then, it follows that the likelihood of observing $\mathcal M$ is 
-\begin{eqnarray}
-f(\mathcal M(ij) ;X_i, X_j, \Psi) =  \Lambda_{ij}(\tau_1(ij)) \cdots \Lambda_{ij}(\tau_N(ij)) \exp\left(-\int_0^1 \Lambda_{ij}(s) ds\right),
-\end{eqnarray}
-where $\Psi$ is the parameter set specifying the entire model and 
-\begin{eqnarray}
-\Lambda_{ij}(s) = \Lambda(X_i(s),X_j(s)).
-\end{eqnarray}  
-
-
-In the rest of this paper, we consider the model when $\Lambda$ is a ``dot-product'' function
-and each $X_i$ is a Jacobi process.  That is, we assume that each $X_i$ is a diffusion 
-process taking values in $[0,1]$ and satisfies (in the weak sense)
-the following stochastic differential equation:
-\begin{eqnarray}
-dX_i(t) = \beta_i(X_i(t) - \gamma_i) dt + \sigma \sqrt{X_i(t) (1-X_i(t))} dW_i(t), 
-\end{eqnarray}
-where each $W_i(t)$ is a standard Brownian motion (starting at zero).  We also assume that the random elements $X_1(0),\ldots, X_n(0)$ and $W_1,\ldots, W_n$ are independent from each other.  Next, for each $x$ and $x^\prime \in [0,1]$, we let 
-\begin{eqnarray}
-\Lambda(x,y) = \lambda (x x^\prime + (1-x) (1-x^\prime)).
-\end{eqnarray}
-For future reference, let
-\begin{eqnarray}
-\overline{\Lambda}(x,y) = x x^\prime + (1-x) (1-x^\prime),
-\end{eqnarray}
-and also
-\begin{eqnarray}
-\psi_i = (\beta_i,\gamma_i,\sigma_i). 
-\end{eqnarray}
-Note that 
-\begin{eqnarray}
-\Psi = (\psi_1,\ldots, \psi_n,\lambda).
-\end{eqnarray}
-
-\section{Monte-Carlo EM algorithm}
-In the last section, we assume the computability (and the existence) 
-of the exact MLE of $\Psi$ from the data $\mathcal M$.   
-Because no analytic formula (in general) for the marginal density 
-of $\mathcal M$ is avaible,
-we instead turn to an EM algorithm, in which each exact MLE is replaced 
-by a sufficiently close estimate of the exact MLE.
-Our formulation of the EM algorithm requires 
-three main steps.  
-At first, we deriving (analytically) 
-the density of the random element $(\mathcal M, X)$.  
-Next, we devise a conditional simulation algorithm for the $E$ step.  
-Finally, we presents a closed-form solution for the $M$ step.
-%\includegraphics[scale=0.75]{myOBJplot.pdf}
-
-Our main result of this paper concerns an algorithm for correctly assigning each vertex into one of two classes, where witnin each group, all the members  
-have the same parameter i.e.\ if vertex $i$ and vertex $j$ are in the same
-class, then $\psi_i = \psi_j$.  The rest of this paper is organized as follows.
-In Section 2, we develop a (Monte-Carlo) EM algorithm for estimating 
-$\Psi$, where formally, no restriction on $\Psi$
-other than requiring $\beta_i < 0$, $\gamma_i \in (0,1)$ and $\sigma_i > 0$ is imposed. 
-In Section 3, using the EM algorithm from Section 2, we formulate an interative 
-procedure for partitioning $n$ vertices into two classes, where in each iteration, the new partitioning is obtained by nominating one vertex to be switched from its current class to the opposite class (i.e. if the nominted vertex is of class $1$, then its new class will be class $2$).  In Section 4, we illustrate our methods for special cases.  In particular, for the spacial case, some convergence properties of the EM algorithm are illustrated and also, classification performance of the iterative nomination partitioning algorithm are demonstrated.  
-
-
-
-\section{Greedy algorithm for vertex nomination}
-In this section, we provide a greedy algorithm for arriving at a partition 
-of the vertex set which is likely to be the true partition of 
-the vertex set that  have produced the data $\mathcal M$.
-
-For the initial step $q=1$, suppose that we have 
-an arbitrary partition $(C_1(1), C_2(1))$ of $[n]$. 
-Let $\Psi(1)$ be the output of our EM algorithm, where we assume that within each group,
-all vertice have the same paramter.  Then, for each pair $i, j \in C_k(1)$, $\Psi_i(q) = \Psi_j(q)$.  
-Let
-\begin{eqnarray}
-Q(1) : = \mathbf E_{\Psi(1)}\left[\log(f_{[0,T]}(\mathcal M, X;\Psi(1)))\right].
-\end{eqnarray}
-
-Next, for the $(q+1)$-st iteration, suppose that we have a partition $(C_1(q), C_2(q))$ from the $q$-th iteration. If $\mathcal C_2(q) = \varnothing$, then our partitioning algorithm terminates, yielding the $q$-th partition $(C_1(q), C_2(q))$ as the final output.  So, we assume that $C_2(q)\neq \varnothing$.  Then, for some $\ell > 0$ and $m > 0$ with $\ell + m = n$, we have 
-\begin{eqnarray}
-\mathcal C_1(q) = \{u_1,\ldots, u_\ell\},\\
-\mathcal C_2(q) = \{v_1,\ldots, v_m\}.
-\end{eqnarray} 
-For each $i \in C_2(q)$, let 
-\begin{eqnarray}
-C_1^{i}(q) = C_1(q) \cup \{i\}, \\
-C_2^{i}(q) = C_2(q) \setminus \{i\}.
-\end{eqnarray}
-Now, for each $i$, let $\Psi^{i}(q)$ be the EM estimate of $\Psi$ with the partition $C_1^{i}(q), C_2^{i}(q)$, and let 
-\begin{eqnarray}
-Q^{i}(q) = \mathbf E_{\Psi^{i}(q)}\left[\log(f_{[0,T]}(\mathcal M,X;\Psi^{i}(q)))\right].
-\end{eqnarray}
-If for all $i \in C_2(q)$, $Q^{i}(q) \le Q(q)$, then the algorithm terminates, yielding 
-$(C_1(q), C_2(q))$ as the final partitioning.  Otherwise, we set 
-\begin{eqnarray}
-i^* = \arg\max_{i \in C_2(q)} Q^{i}(q),
-\end{eqnarray}
-and let 
-\begin{eqnarray}
-&C_1(q+1) = C_1(q) \cup \{i^*\},\\
-&C_2(q+1) = C_2(q) \setminus \{i^*\}.
-\end{eqnarray}
-
+ 
 
 \subsection{Conditional sampling algorithms}
-In the E step, one needs to know how to compute, for each $\Psi$,
+In the E step, one needs to know how to compute, for each $\psi$,
 \begin{eqnarray}
-Q_\ell(\Psi) = \mathbf E_{\Psi_\ell,\mathcal M}\left[ \log f_{[0,T]}(\mathcal M, X^{(\ell)};\Psi)\right],
+Q_\ell(\psi) = \mathbf E_{\psi_\ell,\mathcal D}\left[ \log f_{[0,T]}(\mathcal D, X^{(\ell)};\psi)\right],
 \end{eqnarray}
-where the law of $X^{(\ell)}$ is the law of $X$ conditioning on the data $\mathcal M$ and the paramter $\Psi_\ell$.  The general closed-form expression of $Q(\Psi)$ is difficult to obtain, and we develop a way to obtain a close approximation $\widehat{Q}_\ell$ of $Q$.  To do this, we use a Monte Carlo estimate based on the rejection technique.  First, our simulation of each $X_i$ (uncondtionally) is achieved through discriteziation.  For example, we can fix a small $\Delta t > 0$ and 
+where the law of $X^{(\ell)}$ is the law of $X$ conditioning on the data $\mathcal D$ and the paramter $\psi_\ell$.  The general closed-form expression of $Q(\psi)$ is difficult to obtain, and we develop a way to obtain a close approximation $\widehat{Q}_\ell$ of $Q$.  To do this, we use a Monte Carlo estimate based on the rejection technique.  First, our simulation of each $X_i$ (uncondtionally) is achieved through discriteziation.  For example, we can fix a small $\Delta t > 0$ and 
 \begin{eqnarray}
-X_i(t+\Delta t) = X_i(t) + \beta_i(X_i(t) - \gamma_i) \Delta t + \sigma_i \sqrt{X_i(t) - X_i^2(t)} Z \Delta t,
+Y_i(t+\Delta t) = Y_i(t) + \beta_i(\mu_i - Y_i(t)) \Delta t + \sigma_i  Z \Delta t,
 \end{eqnarray}
 where $Z$ is a standard normal random variable.  
 Next, note that 
 \begin{eqnarray}
-f_{[0,T]}(X\left|\mathcal M\right.;\Psi) 
-&\propto& f_{[0,T]}(X,\mathcal M;\Psi) \\
-&=& f_{[0,T]}(\mathcal M\left|X,\Psi\right.) f_{[0,T]}(X\left|\Psi\right.)\\
-&=& \prod_{i<j} f_{ij}(\mathcal M(ij);X_i,X_j,\Psi) \prod_{i=1}^n f_{[0,T],i}(X_i;\Psi),\\
-&\le & \lambda^{\sum_{ij}M_{ij}} \prod_{i=1}^n f_{[0,T],i}(X_i;\Psi).
+f(Y\left|\mathcal D\right.;\psi) 
+&\propto& f(Y,\mathcal D;\psi) \\
+&=& f(\mathcal D\left|X,\psi\right.) f(Y\left|\psi\right.)\\
+&=& \prod_{i<j} f_{ij}(\mathcal D(ij);X_i,X_j,\psi) \prod_{i=1}^n f_{i}(Y_i;\psi),\\
+&\le & \prod_{i<j} (\lambda_i \lambda_j)^{M_{ij}} \prod_{i=1}^n f_{i}(Y_i;\psi).
 \end{eqnarray}
 Therefore, (in theory), to simulate conitionally, it is enough to simulate 
 $X$ unconditionally as a proposal, and accept the proposed sample path
 with probability:
 \begin{eqnarray}
 \prod_{i<j} \left(
-\exp\left(-\int_{0}^{T} \Lambda(X_i(s),X_j(s)) ds\right)
+\exp\left(-\int_{0}^{T} \Lambda_{ij}(X_i(s),X_j(s)) ds\right)
 \prod_{\ell=1}^{M_{ij}}\overline{\Lambda}_{\kappa_{ij}(\ell)}(X_i(\tau_{ij}(\ell)),X_j(\tau_{ij}(\ell)))
 \right)
 . 
@@ -495,37 +243,11 @@ if the new interval $[t_{\ell},t_{\ell+1})$ has no messaging event but otherwise
 \end{eqnarray}
 
 In our experiment, this sequential simulation technique significantly improve the efficiency of algorithm but it is important to note that the size of each $t_{i+1} - t_i$ is chosen with care since making it too small creates another rare event type issue, namely, always accepting the proposed sample path segment when ocassionally rejected.   
- 
-%\includegraphics[scale=0.75]{mydataplot.pdf}
-
-\subsection{????}
 
 
-\section{General multi-period model}
-Consider now a sequence of periods,
-\begin{eqnarray}
-[T^0,T^1),[T^1,T^2),\ldots, [T^{p_0-1},T^{p_0}),
-\end{eqnarray}
-and suppose that we also have 
-a sequence of messaging records
-\begin{eqnarray}
-\mathcal M^1,\mathcal M^2,\ldots, \mathcal M^{p_0}.
-\end{eqnarray}
-For each $p \in \{1,\ldots, p_0\}$, we assume that  
-the time-stamp of each message in $\mathcal M_p$ is from the interval 
-$[T^{p-1},T^{p})$.  For each $p$, suppose that we have parameter $\Psi^p$ and 
-assume that we have the partition $(C_1^p,C_2^p)$. Now, we now assume
-that $\Psi^{p+1}$ is the maximizer of the full log-likelihood funtion 
-$f_{[T^{p-1},T^{p})}(\mathcal M^p,Y^p;\Psi)$, where $Y^p$ is the Lamperati transform of $X$.  
+\section{Estimation by Kalman-Bucy filtering}
 
-Note that the MLE $\widehat{\Psi}^p$ of $\Psi^p$ need not be the same as $\Psi^{p+1}$ since $\widehat{\Psi}^p$ is the maximizer of the (marginal) log-likelihood $f_{[T^p,T^{p+1})}(\mathcal M^p;\Psi)$.  We now let 
-$\Psi^p$ to be the parameter of $X$ for the period $[T^p,T^{p+1})$.  In particualr, $\widehat{\Psi}^{p+1}$ is the MLE of $\Psi^{p+1}$.  Also, note that $\Psi^{p+1}$ partitions the vertex set $[n]$ into $(C_1^{p+1},C_2^{p+1})$. 
 
-To what end, should this be done?  
-\begin{enumerate}
-\item[(i)]  One must come up with a way to measure the error.
-\item[(ii)] How do we incooporate the error measured into the new estimate? \& formalize the procedure.
-\item[(iii)]  Experiment on some synthetic data \& validate the proposed procedure
-\item[(iv)] Apply on the real data \& report on the findings.
-\end{enumerate}
+
+
 \end{document}
