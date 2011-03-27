@@ -97,7 +97,6 @@ $$
 $$
 The term single period here emphasises the fact that the parameter $\Psi$ (and the nusiance paramters) are assumed to be constant within time period $[0,1]$. 
 \section{Greedy algorithm for iterative vertex nomination}
- 
 Our main result of this paper concerns an algorithm 
 for correctly assigning each vertex into one of two classes, where witnin each group, all the members  
 have the same parameter i.e.\ if vertex $i$ and vertex $j$ are in the same
@@ -174,7 +173,7 @@ $$
    
 Note that conditioning on the path of $Y_i$ and $Y_j$ (but not on $\mathcal D)$, and given the value of $\psi$, the value of $f_{ij}(\cdot;X_i,X_j,\psi)$ can be seen to be
 \begin{eqnarray}\label{formula2010.12.19.12.31.pm}
-\prod_{i<j} \left(\prod_{\ell=1}^{M_{ij}} \Lambda_{i,\kappa_{ij}(\ell)}(\tau_{ij}(\ell))\Lambda_{j,\kappa_{ij}(\ell)}(\tau_{ij}(\ell))\right) \exp\left(-\int_0^T \Lambda_{ij}(s) ds\right).
+\prod_{i<j} \left(\prod_{\ell=1}^{M_{ij}} \Lambda_{i,\kappa_{ij}(\ell)}(\tau_{ij}(\ell))\Lambda_{j,\kappa_{ij}(\ell)}(\tau_{ij}(\ell))\right) \exp\left(-\int_0^1 \Lambda_{ij}(s) ds\right).
 \end{eqnarray}
 Next, given $\sigma_i=1$ and $\beta_i=1$ for all $i=1,\ldots, n$, 
 it can be shown that
@@ -202,9 +201,34 @@ satisfies the following equations:
 \lambda_i \sum_{j\neq i}  \lambda_j (2 X_{i,j} - 1) =0.
 \end{eqnarray}
 
- 
+
 
 \subsection{Conditional sampling algorithms}
+Fix an (unordered) pair $ij$. Note that 
+\begin{eqnarray}
+&\ & \mathcal L_{ij}^r := \mathbf E_r[\log\prod_{m=1}^{M_{ij}} \log(\Lambda_{ij,k_{ij}(\ell)}(\tau_{ij}(\ell))  - \int_0^1 \Lambda_{ij}(s)ds]\\
+&= &  \sum_{m=1}^{M_{ij}} \log(\lambda_i) + \log(\lambda_j) \\
+&\ & + \sum_{m=1}^{M_{ij,1}}\mathbf E_r[\log(X_{i,1}(\tau_{ij,1}(m)))\left|\mathcal D\right.]+\mathbf E_r[\log(X_{j,1}(\tau_{ij,1}(m)))\left|\mathcal D\right.]\\
+&\ & + \sum_{m=1}^{M_{ij,2}}\mathbf E_r[\log(X_{i,2}(\tau_{ij,2}(m)))]+\mathbf E[\log(X_{j,2}(\tau_{ij,2}(m)))\left|\mathcal D\right.]\\
+&\ & - \lambda_i - \lambda_j - \int_0^1 \mathbf E_r[X_{i,1}(s)X_{j,1}(s) + X_{i,2}(s)X_{j,2}(s)|\mathcal D]ds,
+\end{eqnarray}
+where $\mathbf E_r$ denote the expectation under the parameter $\psi^r$.
+To compute the gradient of $\mathcal L_{ij}^r$ with respecto $\psi$, it suffices to know how to evaluate, for any bounded continuous function $f$,
+for each $s \in [0,1]$,
+\begin{eqnarray}
+\mathbf E_r[f(X_{i,1}(s))\left|\mathcal D\right.]
+\propto \mathbf E_r[f(X_{i,1}(s));\mathcal D], 
+\end{eqnarray}
+where the proportionality constant does not depend on $\psi$.  Now, note that 
+\begin{eqnarray}
+&\ & \mathbf E_r[f(X_{i,1}(s));\mathcal D]\\
+&= & 
+\mathbf E_r[f(X_{i,1}(s))P_r[\mathcal D \left|\mathcal F^X\right.]]\\
+&= &
+\mathbf E_r[f(X_{i,1}(s)) \prod_{j\neq i} \prod_{m=1}^{M_{ij}} \lambda_i^r \lambda_j^r X_{ij,k_{ij}(m)}(\tau_{ij}(m))
+\exp(-\lambda_i^r \lambda_j^r \int_0^1 X_{i,1}(t)X_{j,1}(t) + X_{i,2}(t)X_{j,2}(t) dt)],
+\end{eqnarray}
+
 In the E step, one needs to know how to compute, for each $\psi$,
 \begin{eqnarray}
 Q_\ell(\psi) = \mathbf E_{\psi_\ell,\mathcal D}\left[ \log f_{[0,T]}(\mathcal D, X^{(\ell)};\psi)\right],
