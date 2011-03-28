@@ -51,6 +51,7 @@ where
 X_{i,k}(t) = \frac{\Lambda_{i,k}(t)}{\Lambda_i(t)},
 \end{eqnarray}
 and note that each $X_i(t)$ is a probability vector. 
+
 For each (undirected) pair $ij$, we assume that 
 the process $N_{ij} = (N_{ij}(t):t\in[0,1])$ is   
 a doubly stocastic Poisson process that whose intensity process is  
@@ -85,17 +86,18 @@ dY_i(t) = \beta_i (\mu_i - Y_i(t)) dt + \sigma_i dB_i(t),
 for some fixed constants $\mu_1,\ldots, \mu_n \in \mathbb R$, and $\sigma_1 = \ldots = \sigma_n \in (0,\infty)$ and $\beta_1 = \ldots = \beta_n \in (0,\infty)$. 
 Then, we assume that 
 \begin{eqnarray}
-X_{i,1}(t) = \frac{\exp(-Y_i(t))}{1+\exp(-Y_i(t))}.
+X_{i,1}(t) = \frac{1}{1+\exp(-Y_i(t))}.
 \end{eqnarray}
-While we could also take $\sigma_1,\ldots,\sigma_n$ and $\beta_1,\ldots, \beta_n$ to be parameters, 
-but for our vertex nomination problem or more generally classification problem, 
-these potential paramters are (perhaps) nuisance parameters (?).  
-In our algorithm, we propose to fix the nusiance parameters before proceding to a classification/vertex notimation task.
-Finally, for future reference, we let
-$$
-\psi = (\mu_1,\ldots, \mu_n,\lambda_1,\ldots,\lambda_n).
-$$
-The term single period here emphasises the fact that the parameter $\Psi$ (and the nusiance paramters) are assumed to be constant within time period $[0,1]$. 
+For future reference, we let
+\begin{eqnarray}
+&\mu = (\mu_1,\ldots, \mu_n),\\
+&\beta = (\beta_1,\ldots,\beta_n),\\
+&\sigma = (\sigma_1,\ldots,\sigma_n),\\
+&\lambda = (\lambda_1,\ldots,\lambda_n),\\
+&\psi = (\mu,\beta,\sigma,\lambda).
+\end{eqnarray}
+The term single period here emphasises the fact that the parameter $\psi$ 
+are assumed to be constant within time period $[0,1]$. 
 \section{Greedy algorithm for iterative vertex nomination}
 Our main result of this paper concerns an algorithm 
 for correctly assigning each vertex into one of two classes, where witnin each group, all the members  
@@ -141,25 +143,24 @@ and let
 &C_2(r+1) = C_2(r) \setminus \{i^*\}.
 \end{eqnarray}
 
-
-
 \section{Estimation by EM procedure}
-\subsection{Overview}
+\subsection{Preliminaries}
 Let
 \begin{enumerate}
 \item[(i)] $M_{ij}$ is the (total) number of messages between vertex $i$ and vertex $j$,
-\item[(2)] $\tau_{ij}(\ell)$ is the time at which occurred the $\ell$-th communication event  between vertex $i$ and vertex $j$.
+\item[(ii)] $\tau_{ij}(\ell)$ is the time at which occurred the $\ell$-th communication event  between vertex $i$ and vertex $j$.
 \end{enumerate}
-In the expectation stage of our EM algorithm, for each $\psi$, we compute the expected value of the following random variable:
+The EM algorithm is then given the $r$-th estimate $\psi^r$, find the $(r+1)$-st estimate $\psi^{r+1}$ by 
+finding $\psi$ that maximizes the expected value of the following random variable:
 \begin{eqnarray}
-\prod_{i<j} f_{ij}(\mathcal D(ij);X_i^r,X_j^r,\psi) \prod_{i=1}^n f_{i}(Y_i^r;\psi),
+F^r(\psi):=\prod_{i<j} f_{ij}(\mathcal D_{ij});X_i^r,X_j^r,\psi) \prod_{i=1}^n f_{i}(Y_i^r;\psi),
 \end{eqnarray}
 where 
 \begin{enumerate}
 \item[(i)] $Y_i^r$ is a diffusion process whose distribution is a conditional distribution of $Y_i$ given the observation $\mathcal D$ with the unconditional distribution of $Y_i$ for the $r$-th estimated parameter $\psi^r$,
 \item[(ii)] $f_{i}(\cdot;\psi)$ is the likelihood of the $i$-th vertex 
 process' sample path $Y_i$ with the parameter $\psi$,
-\item[(iii)] $f_{ij}(\cdot;X_i^r,X_j^r,\psi)$ specifies the conditional likelidhood given $X_1^r,\ldots,X_n^r$ of 
+\item[(iii)] $f_{ij}(\cdot;X_i^r,X_j^r,\psi)$ specifies the conditional likelidhood given $X_i^r,X_j^r$ of 
 observing message at time 
 $$
 \tau_{ij}(1),\ldots, \tau_{ij}(M_{ij}),
@@ -169,44 +170,68 @@ $$
 \kappa_{ij}(1),\ldots, \kappa_{ij}(M_{ij}).
 $$
 \end{enumerate}
-
-   
-Note that conditioning on the path of $Y_i$ and $Y_j$ (but not on $\mathcal D)$, and given the value of $\psi$, the value of $f_{ij}(\cdot;X_i,X_j,\psi)$ can be seen to be
-\begin{eqnarray}\label{formula2010.12.19.12.31.pm}
-\prod_{i<j} \left(\prod_{\ell=1}^{M_{ij}} \Lambda_{i,\kappa_{ij}(\ell)}(\tau_{ij}(\ell))\Lambda_{j,\kappa_{ij}(\ell)}(\tau_{ij}(\ell))\right) \exp\left(-\int_0^1 \Lambda_{ij}(s) ds\right).
-\end{eqnarray}
-Next, given $\sigma_i=1$ and $\beta_i=1$ for all $i=1,\ldots, n$, 
-it can be shown that
+It can be seen that
 \begin{eqnarray*}
-&\ &\log (f_i(Y_{i}^r(t);\psi))\\
-&= & \mu_i (Y_{i}^r(1) - Y_{i}^r(0)) - \frac{1}{2} ((Y_{i}^r(1))^2 - (Y_i^r(0))^2) - \frac{1}{2} \int_0^1 (\mu_i-Y_{i}^r(t))^2 - 1 dt. 
+L_{ij}^r(\psi) 
+&:= & \log f_{ij}(\mathcal D_{ij} ;X_i^r,X_j^r,\psi) \\
+&= &  \sum_{i<j} 
+\left(
+\sum_{\ell=1}^{M_{ij}} \log(\lambda_i) + \log(\lambda_j) + 
+\log(X_{i,\kappa_{ij}}(\tau_{ij}(\ell))) +
+\log(X_{j,\kappa_{ij}}(\tau_{ij}(\ell))) \right) \\
+&\ &  - \sum_{i<j} \lambda_i\lambda_j \int_0^1 X_{i,1}^r(s)X_{j,1}^r(s)+X_{i,2}^r(s)X_{j,2}^r(s) ds,
+\end{eqnarray*}
+and that 
+\begin{eqnarray*}
+R_i^r(\psi) 
+&:= & \log (f_i(Y_{i}^r(t);\psi))\\
+&= &
+\left. \frac{\beta_i}{\sigma_i^2} \left( \mu_i Y_t^r - \frac{1}{2} (Y_t^r)^2\right) \right|_0^1
+- \frac{1}{2} \frac{\beta_i^2}{\sigma_i^2} \int_0^1 (\mu_i-Y_{i}^r(t))^2 dt + \frac{\beta_i}{2}. 
+\end{eqnarray*}
+Then, we have 
+\begin{eqnarray}
+Q^r(\psi) = \log(F^r(\psi)) := \sum_{i<j} L_{i,j}^r(\psi) + \sum_{j} R_j^r(\psi).  
+\end{eqnarray}
+
+While we give the details for our $M$-step and then our $E$-step in the next two sections, 
+we list here some facts relevant in their derivation:
+\begin{description}
+\item[(i)] Each random variable $L_{ij}^r(\psi)$ is parameterized only by $\lambda_i$ and $\lambda_j$, 
+\item[(ii)] Each random variable $R_{i}^r(\psi)$ is parameterized only by the $\mu_i, \beta_i$ and $\sigma_i$,
+\item[(iii)] While unconditionally, the diffusion processes $Y_1,\ldots, Y_n$ are independent,
+conditionally on $\mathcal D$, $Y_1,\ldots,Y_n$ need not be independent.
+\end{description}
+
+\subsection{M-step}
+For simplicity, we let $\langle \cdot \rangle$ be the operator taking the expectation of a random 
+variable conditionally on $\mathcal D$.
+Our main result in this section is that 
+the $(r+1)$-st estimate $\psi^{(r+1)}$ satisfies the following equations:
+\begin{eqnarray*}
+\sigma_{i,r}^2 &=& 2 \mathbf E_*\left[ \beta_i \int_0^1 \left(\mu_i - Y_i^r(t)\right)^2dt 
+- \left(\left.\mu_i Y_i^r(t) - \frac{1}{2} (Y_i^r(t))^2\right)\right|_0^1\right]\\\mu_{i,r} 
+&=&  \frac{\left. \mathbf E_*[Y_i^r(t)^2]\right|_0^1}{\left.\mathbf E_*[Y_i^r(t)\right|_0^1}\\ 
+&\ &\pm
+\sqrt{
+\left(\frac{\left.\mathbf E_*[Y_i^r(t)^2]\right|_0^1}{\left.\mathbf E_*[Y_i^r(t)]\right|_0^1}\right)^2 
+-
+4\left( \frac{\left.\mathbf E_*[Y_i^r(t)^2]\right|_0^1}{\left.\mathbf E_*[Y_i^r(t)]\right|_0^1} \int_0^1\mathbf E_*[Y_i^r(t)]dt - \int_0^1 \mathbf E_*[Y_i(t)^2] dt\right)}\\
+\beta_{i,r}
+&=&
+\frac{\left. \mathbf E_*[Y_i^r(t)] \right|_0^1}{\mu_{i,r} - \int_0^1 \mathbf E_*[Y_i^r(t)]dt}\\
+\lambda_{i,r} 
+&=& 
+\frac{M_i}
+{
+\sum_{j\neq i} \lambda_j \int_0^1 \mathbf E_*[\langle X_i^r(s), X_j^r(s)\rangle] ds.
+} 
 \end{eqnarray*}
 
 
-Now we remark here that while unconditionally, the diffusion processes $Y_1,\ldots, Y_n$ are independent, 
-conditionally, $Y_1,\ldots,Y_n$ need not be independent.  
-Computing the exact conditionally likelihood of $Y_i^r$ analytically is difficult if not practically impossible 
-even for the relatively simple diffusion process $Y_1,\ldots,Y_n$ that we are considering in this paper. 
-Because of this, our algorithm relies instead on an EM algorithm in where the expected value in the E step 
-is estimated by simulation and in the M step, the maximization is done numerically.     
-An except to this arises if we set the nusiance parameter $\sigma_1 = \ldots = \sigma_n = 0$.
-In this case, each $Y_i^r = \mu_i$ and it is not difficult to see that the MLE of $\psi$ given $\mathcal D$ 
-satisfies the following equations:
-\begin{eqnarray}
-\frac{1}{\lambda_i} \left(\sum_{j\neq i} M_{ij}\right)  -  \sum_{j\neq i} \lambda_j (2 X_i X_j + 1 - X_i - X_j) = 0,
-\end{eqnarray}
-\begin{eqnarray}
-\frac{1}{X_{i,1}} \left(\sum_{j\neq i} M_{ij,1}\right)  + \frac{1}{1-X_{j,1}} \sum_{j\neq i} M_{ij,2} 
--
-\lambda_i \sum_{j\neq i}  \lambda_j (2 X_{i,j} - 1) =0.
-\end{eqnarray}
-
-
-
-\subsection{Conditional sampling algorithms}
 Fix an (unordered) pair $ij$. Note that 
 \begin{eqnarray}
-&\ & \mathcal L_{ij}^r := \mathbf E_r[\log\prod_{m=1}^{M_{ij}} \log(\Lambda_{ij,k_{ij}(\ell)}(\tau_{ij}(\ell))  - \int_0^1 \Lambda_{ij}(s)ds]\\
+&\ & \mathcal L_{ij}^r := \mathbf E_r[\sum_{m=1}^{M_{ij}} \log(\Lambda_{ij,k_{ij}(\ell)}(\tau_{ij}(\ell))  - \int_0^1 \Lambda_{ij}(s)ds]\\
 &= &  \sum_{m=1}^{M_{ij}} \log(\lambda_i) + \log(\lambda_j) \\
 &\ & + \sum_{m=1}^{M_{ij,1}}\mathbf E_r[\log(X_{i,1}(\tau_{ij,1}(m)))\left|\mathcal D\right.]+\mathbf E_r[\log(X_{j,1}(\tau_{ij,1}(m)))\left|\mathcal D\right.]\\
 &\ & + \sum_{m=1}^{M_{ij,2}}\mathbf E_r[\log(X_{i,2}(\tau_{ij,2}(m)))]+\mathbf E[\log(X_{j,2}(\tau_{ij,2}(m)))\left|\mathcal D\right.]\\
@@ -285,7 +310,7 @@ it too small creates another rare event type issue, namely, always accepting the
 segment when ocassionally rejected.   
 
 
-\section{Estimation by Kalman-Bucy filtering}
+\section{Test of goodness of fit via Kalman-Bucy filtering}
 
  
 \begin{figure}
