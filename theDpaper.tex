@@ -305,55 +305,6 @@ Q_\ell(\psi) = \mathbf E_{\psi_\ell,\mathcal D}\left[ \log f_{[0,T]}(\mathcal D,
 where the law of $X^{(\ell)}$ is the law of $X$ conditioning on the data $\mathcal D$ and the paramter $\psi_\ell$.  
 The general closed-form expression of $Q(\psi)$ is difficult to obtain, 
 and we develop a way to obtain a close approximation $\widehat{Q}_\ell$ of $Q$.  
-To do this, we use a Monte Carlo estimate based on the rejection technique. 
- First, our simulation of each $X_i$ (uncondtionally) is achieved through discriteziation.  
-For example, we can fix a small $\Delta t > 0$ and 
-\begin{eqnarray}
-Y_i(t+\Delta t) = Y_i(t) + \beta_i(\mu_i - Y_i(t)) \Delta t + \sigma_i  Z \Delta t,
-\end{eqnarray}
-where $Z$ is a standard normal random variable.  
-Next, note that 
-\begin{eqnarray}
-f(Y\left|\mathcal D\right.;\psi) 
-&\propto& f(Y,\mathcal D;\psi) \\
-&=& f(\mathcal D\left|X,\psi\right.) f(Y\left|\psi\right.)\\
-&=& \prod_{i<j} f_{ij}(\mathcal D(ij);X_i,X_j,\psi) \prod_{i=1}^n f_{i}(Y_i;\psi),\\
-&\le & \prod_{i<j} (\lambda_i \lambda_j)^{M_{ij}} \prod_{i=1}^n f_{i}(Y_i;\psi).
-\end{eqnarray}
-Therefore, (in theory), to simulate conitionally, it is enough to simulate 
-$X$ unconditionally as a proposal, and accept the proposed sample path
-with probability:
-\begin{eqnarray}
-\prod_{i<j} \left(
-\exp\left(-\int_{0}^{1} \lambda_i \lambda_j \langle X_i(\tau_{ij}(\ell)),X_j(\tau_{ij}(\ell))\rangle ds\right)
-\prod_{\ell=1}^{M_{ij}}\langle X_i(\tau_{ij}(\ell)),X_j(\tau_{ij}(\ell))\rangle\right)
-. 
-\end{eqnarray}
-
-On the other hand, the rejection probability (as the algorithm is presented now) is not trivial 
-and as $\sum_{i<j} M_{ij}$ gets larger, the second factor is likely to be a very small number.  
-To remedy this, we use a sequential rejection sampling prodedure.  
-First, we partition the interval $[0,1]$ into many pieces, say, with grid $0,t_1,\ldots, t_L$, 
-so that each interval $[t_{\ell},t_{\ell+1})$ contains at most one messaging event (of any kind). 
-Then, progressing from the left end point to the right end point recursively, starting 
-from the $X(t_{\ell})$ obtained from the preceding interval simulation, simulate unconditionally.  
-Then, accept and append the proposed sample path segment with the probability:
-\begin{eqnarray}
-\exp\left(-\int_{t_{\ell}}^{t_{\ell+1}} \lambda_i \lambda_j \langle X_{i}(s), X_j(s)\rangle ds\right).
-\end{eqnarray}
-if the new interval $[t_{\ell},t_{\ell+1})$ has no messaging event but otherwise, accept and append the proposed sample path segment with the probability:
-\begin{eqnarray}
-\langle X_i(\tau_{ij}^\ell),X_j(\tau_{ij}^\ell)\rangle 
-\exp\left(-\int_{t_{\ell}}^{t_{\ell+1}} \lambda_i \lambda_j \langle X_i(s), X_j(s)\rangle ds\right),
-\end{eqnarray}
-where $\tau_{ij}^\ell$ here denotes the occurrence time of the messaging event.
-
-In our experiment, this sequential simulation technique significantly improve the efficiency of algorithm 
-but it is important to note that the size of each $t_{\ell+1} - t_\ell$ is chosen with care since making 
-it too small creates another rare event type issue, namely, always accepting the proposed sample path 
-segment when ocassionally rejected.   
-
-
 \section{Test of goodness of fit via Kalman-Bucy filtering}
 
  
