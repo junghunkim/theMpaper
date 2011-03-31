@@ -203,10 +203,54 @@ we list here some facts relevant in their derivation:
 conditionally on $\mathcal D$, $Y_1,\ldots,Y_n$ need not be independent.
 \end{description}
 
-\subsection{M-step}
-For simplicity, we let $\langle \cdot \rangle$ be the operator taking the expectation of a random 
-variable conditionally on $\mathcal D$.
-Our main result in this section is that 
+\subsection{EM-steps}
+In this section, we specifies our EM steps, yielding a sequence of estimates:
+\begin{eqnarray}
+\{\psi^r: r \in \mathbb N\}.
+\end{eqnarray}
+Let
+\begin{eqnarray}
+\Lambda_{(\ell,+)}^r(s)
+=
+\lambda_{(\ell)}^r \lambda_{(\ell)}^r X_{i(\ell),k(\ell)}^r(s)X_{j(\ell),k(\ell)}^r(s),
+\end{eqnarray}
+and then, 
+\begin{eqnarray}
+\Lambda_{(\ell,-)}^r(s)
+=
+\lambda_{(\ell)}^r \lambda_{(\ell)}^r (1-X_{i(\ell),k(\ell)}^r(s))(1-X_{j(\ell),k(\ell)}^r(s)).
+\end{eqnarray}
+Let 
+\begin{eqnarray}
+W_\ell = \Lambda_{(\ell,+)}(\tau_\ell) \exp\left(-\int_{\tau_{(\ell-1}}^{\tau(\ell)} \sum_{i<j} \Lambda_{i,j}^r(s) ds\right),  
+\end{eqnarray}
+Then, let 
+\begin{eqnarray}
+W = \prod_{\ell=1}^M W_{\ell}.
+\end{eqnarray}
+For simplicity, we let $\langle \cdot \rangle$ be the inner-product operator, i.e.\ for $x,y\in\mathbb R^d$, $\langle x, y \rangle = \sum_{\ell=1}^d x_i y_i$.   
+
+\begin{eqnarray}
+W^r = \prod_{\ell=1}^{M} \exp\left(-\int_{\tau_{\ell-1}}^{\tau_\ell} \Lambda^r(s) ds\right)
+\end{eqnarray}
+
+Our main results in this section are the specification of our EM steps.  Let $\psi^r$ denote the $r$-th estimate from our $EM$-sequence, and for each $\psi \in \Psi$, define  
+\begin{eqnarray}
+rQ_r(\psi) = \mathbf E_*[F^r(\psi)],
+\end{eqnarray}
+where $\mathbf E_*$ denote the expectation operator conditioal on the data $\mathcal D$.  
+\begin{lem}
+Let $\xi$ be an $\mathcal F^r$-measurable random variable, where
+\begin{eqnarray}
+\mathcal F^r = \sigma(Y_s^r: s \le t).
+\end{eqnarray}  
+Then, 
+\begin{eqnarray}
+\mathbf E_*[\xi] = \mathbf E[\xi W^r]/\mathbf E[W^r].
+\end{eqnarray}
+\end{lem}
+
+
 the $(r+1)$-st estimate $\psi^{(r+1)}$ satisfies the following equations:
 \begin{eqnarray*}
 \sigma_{i,r}^2 &=& 2 \mathbf E_*\left[ \beta_i \int_0^1 \left(\mu_i - Y_i^r(t)\right)^2dt 
