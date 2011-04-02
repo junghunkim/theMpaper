@@ -231,8 +231,8 @@ the $(r+1)$-st estimate $\psi^{(r+1)}$ satisfies the following equations:
 
 \section{Test of goodness of fit via Kalman-Bucy filtering}
 Our model for the communication records is a so-called multichannel doubly
-stochastic marked Poisson process which is comprised of $n(n-1)/2$ single-channel doubly stochastic marked Poisson process that are conditionally mutually
-independent Poisson process given the information process.  In particular,  
+stochastic marked Poisson process which is comprised of $n(n-1)/2$ single-channel doubly stochastic marked Poisson process that are conditionally mutually independent Poisson process 
+given the information process.  In particular,  
 each $\{N_t^{(i,j)} : t \in [0,1]\}$ is a doubly stochastic Poisson process with
 corresponding intensity process whose intensity process is $\Lambda_{ij}(\cdot)$.
 \begin{eqnarray}
@@ -240,6 +240,12 @@ dX_i^*(t) =
 \beta_i (\mu_i - X_i^*(t)) dt  
 +
 \Sigma_{t} () \texttt{diag}^{-1}[\lambda_k^k(X_t^*) [dN_t - \lambda_t(X_t^*)dt].
+\end{eqnarray}
+We can take
+\begin{eqnarray}
+\widehat{\lambda}_{ij}(t) 
+&=& \mathbf E\left[ \lambda_{ij}(t) \left| \mathcal F^{N}_t\right.\right] \\
+&=& \mathbf E\left[ \lambda_{ij}(t) D(t)\right]/\mathbf E\left[D(t)\right]
 \end{eqnarray}
 \begin{figure}
 \begin{center}
