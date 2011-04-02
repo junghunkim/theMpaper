@@ -98,50 +98,6 @@ For future reference, we let
 \end{eqnarray}
 The term single period here emphasises the fact that the parameter $\psi$ 
 are assumed to be constant within time period $[0,1]$. 
-\section{Greedy algorithm for iterative vertex nomination}
-Our main result of this paper concerns an algorithm 
-for correctly assigning each vertex into one of two classes, where witnin each group, all the members  
-have the same parameter i.e.\ if vertex $i$ and vertex $j$ are in the same
-class, then $\psi_i = \psi_j$.  
-In this section, we provide a greedy algorithm for arriving at a partition 
-of the vertex set which is likely to be the true partition of 
-the vertex set that  have produced the data $\mathcal D$.
-
-For the initial step $q=1$, suppose that we have 
-an arbitrary partition $(C_1(1), C_2(1))$ of $\{1,\ldots, n\}$. 
-Let $\psi^1$ be the output of our EM algorithm, where we assume that within each group,
-all vertice have the same paramter.  Then, for each pair $i, j \in C_k(1)$, $\psi_i^1 = \psi_j^1$.  
-Let
-\begin{eqnarray}
-Q(1) : = \mathbf E_{\psi(1)}\left[\log(f(\mathcal D, Y;\psi^1))\right],
-\end{eqnarray}
-where $f(;\psi)$ denote the likelikehood function of observing $\mathcal D$ and $Y$ with the given parameter $\psi$ (see the next section for more details about this). 
-Next, for the $(r+1)$-st iteration, suppose that we have a partition $(C_1(r), C_2(r))$ from the $r$-th iteration. 
-If $C_2(r) = \varnothing$, then our partitioning algorithm terminates, yielding the $r$-th partition 
-$(C_1(r), C_2(r))$ as the final output.  So, we assume that $C_2(r)\neq \varnothing$.  Then, for some $\ell > 0$ and $m > 0$ with $\ell + m = n$, we have 
-\begin{eqnarray}
-&C_1(r) = \{u_1,\ldots, u_\ell\},\\
-&C_2(r) = \{v_1,\ldots, v_m\}.
-\end{eqnarray} 
-For each $i \in C_2(r)$, let 
-\begin{eqnarray}
-&C_1^{i}(r) = C_1(r) \cup \{i\}, \\
-&C_2^{i}(r) = C_2(r) \setminus \{i\}.
-\end{eqnarray}
-Now, for each $i$, let $\psi^{i,r}$ be the EM estimate of $\psi$ with the partition $(C_1^{i}(r), C_2^{i}(r))$, and let 
-\begin{eqnarray}
-Q^{i}(r) = \mathbf E_{\psi^{i,r}}\left[\log(f(\mathcal D,Y;\psi^{i,r}))\right].
-\end{eqnarray}
-If for all $i \in C_2(r)$, $Q^{i}(r) \le Q(r)$, then the algorithm terminates, yielding 
-$(C_1(r), C_2(r))$ as the final partitioning.  Otherwise, we set 
-\begin{eqnarray}
-i^* = \arg\max_{i \in C_2(r)} Q^{i}(r),
-\end{eqnarray}
-and let 
-\begin{eqnarray}
-&C_1(r+1) = C_1(r) \cup \{i^*\},\\
-&C_2(r+1) = C_2(r) \setminus \{i^*\}.
-\end{eqnarray}
 
 \section{Estimation by EM procedure}
 \subsection{Preliminaries}
@@ -273,41 +229,18 @@ the $(r+1)$-st estimate $\psi^{(r+1)}$ satisfies the following equations:
 \end{eqnarray*}
 
 
-Fix an (unordered) pair $ij$. Note that 
-\begin{eqnarray}
-&\ & \mathcal L_{ij}^r := \mathbf E_r[\sum_{m=1}^{M_{ij}} \log(\Lambda_{ij,k_{ij}(\ell)}(\tau_{ij}(\ell))  - \int_0^1 \Lambda_{ij}(s)ds]\\
-&= &  \sum_{m=1}^{M_{ij}} \log(\lambda_i) + \log(\lambda_j) \\
-&\ & + \sum_{m=1}^{M_{ij,1}}\mathbf E_r[\log(X_{i,1}(\tau_{ij,1}(m)))\left|\mathcal D\right.]+\mathbf E_r[\log(X_{j,1}(\tau_{ij,1}(m)))\left|\mathcal D\right.]\\
-&\ & + \sum_{m=1}^{M_{ij,2}}\mathbf E_r[\log(X_{i,2}(\tau_{ij,2}(m)))]+\mathbf E[\log(X_{j,2}(\tau_{ij,2}(m)))\left|\mathcal D\right.]\\
-&\ & - \lambda_i - \lambda_j - \int_0^1 \mathbf E_r[X_{i,1}(s)X_{j,1}(s) + X_{i,2}(s)X_{j,2}(s)|\mathcal D]ds,
-\end{eqnarray}
-where $\mathbf E_r$ denote the expectation under the parameter $\psi^r$.
-To compute the gradient of $\mathcal L_{ij}^r$ with respecto $\psi$, it suffices to know how to evaluate, for any bounded continuous function $f$,
-for each $s \in [0,1]$,
-\begin{eqnarray}
-\mathbf E_r[f(X_{i,1}(s))\left|\mathcal D\right.]
-\propto \mathbf E_r[f(X_{i,1}(s));\mathcal D], 
-\end{eqnarray}
-where the proportionality constant does not depend on $\psi$.  Now, note that 
-\begin{eqnarray}
-&\ & \mathbf E_r[f(X_{i,1}(s));\mathcal D]\\
-&= & 
-\mathbf E_r[f(X_{i,1}(s))P_r[\mathcal D \left|\mathcal F^X\right.]]\\
-&= &
-\mathbf E_r[f(X_{i,1}(s)) \prod_{j\neq i} \prod_{m=1}^{M_{ij}} \lambda_i^r \lambda_j^r X_{ij,k_{ij}(m)}(\tau_{ij}(m))
-\exp(-\lambda_i^r \lambda_j^r \int_0^1 X_{i,1}(t)X_{j,1}(t) + X_{i,2}(t)X_{j,2}(t) dt)],
-\end{eqnarray}
-
-In the E step, one needs to know how to compute, for each $\psi$,
-\begin{eqnarray}
-Q_\ell(\psi) = \mathbf E_{\psi_\ell,\mathcal D}\left[ \log f_{[0,T]}(\mathcal D, X^{(\ell)};\psi)\right],
-\end{eqnarray}
-where the law of $X^{(\ell)}$ is the law of $X$ conditioning on the data $\mathcal D$ and the paramter $\psi_\ell$.  
-The general closed-form expression of $Q(\psi)$ is difficult to obtain, 
-and we develop a way to obtain a close approximation $\widehat{Q}_\ell$ of $Q$.  
 \section{Test of goodness of fit via Kalman-Bucy filtering}
-
- 
+Our model for the communication records is a so-called multichannel doubly
+stochastic marked Poisson process which is comprised of $n(n-1)/2$ single-channel doubly stochastic marked Poisson process that are conditionally mutually
+independent Poisson process given the information process.  In particular,  
+each $\{N_t^{(i,j)} : t \in [0,1]\}$ is a doubly stochastic Poisson process with
+corresponding intensity process whose intensity process is $\Lambda_{ij}(\cdot)$.
+\begin{eqnarray}
+dX_i^*(t) = 
+\beta_i (\mu_i - X_i^*(t)) dt  
++
+\Sigma_{t} () \texttt{diag}^{-1}[\lambda_k^k(X_t^*) [dN_t - \lambda_t(X_t^*)dt].
+\end{eqnarray}
 \begin{figure}
 \begin{center}
 \includegraphics[scale=0.30]{v34_myDdata_w38.png}
@@ -325,6 +258,51 @@ and we develop a way to obtain a close approximation $\widehat{Q}_\ell$ of $Q$.
 \caption{w38 versus w58, $\hat{\lambda}_i$ and $\hat{\mu}_i$ obtained by the initialization step of the EM alglorithm on $\mathcal D = \mathcal D(V_{184})$, where $V_{184} = \{1,\ldots, 184\}$}
 \label{cepplot}
 \end{figure}
+
+\section{Greedy algorithm for iterative vertex nomination}
+Our main result of this paper concerns an algorithm 
+for correctly assigning each vertex into one of two classes, where witnin each group, all the members  
+have the same parameter i.e.\ if vertex $i$ and vertex $j$ are in the same
+class, then $\psi_i = \psi_j$.  
+In this section, we provide a greedy algorithm for arriving at a partition 
+of the vertex set which is likely to be the true partition of 
+the vertex set that  have produced the data $\mathcal D$.
+
+For the initial step $q=1$, suppose that we have 
+an arbitrary partition $(C_1(1), C_2(1))$ of $\{1,\ldots, n\}$. 
+Let $\psi^1$ be the output of our EM algorithm, where we assume that within each group,
+all vertice have the same paramter.  Then, for each pair $i, j \in C_k(1)$, $\psi_i^1 = \psi_j^1$.  
+Let
+\begin{eqnarray}
+Q(1) : = \mathbf E_{\psi(1)}\left[\log(f(\mathcal D, Y;\psi^1))\right],
+\end{eqnarray}
+where $f(;\psi)$ denote the likelikehood function of observing $\mathcal D$ and $Y$ with the given parameter $\psi$ (see the next section for more details about this). 
+Next, for the $(r+1)$-st iteration, suppose that we have a partition $(C_1(r), C_2(r))$ from the $r$-th iteration. 
+If $C_2(r) = \varnothing$, then our partitioning algorithm terminates, yielding the $r$-th partition 
+$(C_1(r), C_2(r))$ as the final output.  So, we assume that $C_2(r)\neq \varnothing$.  Then, for some $\ell > 0$ and $m > 0$ with $\ell + m = n$, we have 
+\begin{eqnarray}
+&C_1(r) = \{u_1,\ldots, u_\ell\},\\
+&C_2(r) = \{v_1,\ldots, v_m\}.
+\end{eqnarray} 
+For each $i \in C_2(r)$, let 
+\begin{eqnarray}
+&C_1^{i}(r) = C_1(r) \cup \{i\}, \\
+&C_2^{i}(r) = C_2(r) \setminus \{i\}.
+\end{eqnarray}
+Now, for each $i$, let $\psi^{i,r}$ be the EM estimate of $\psi$ with the partition $(C_1^{i}(r), C_2^{i}(r))$, and let 
+\begin{eqnarray}
+Q^{i}(r) = \mathbf E_{\psi^{i,r}}\left[\log(f(\mathcal D,Y;\psi^{i,r}))\right].
+\end{eqnarray}
+If for all $i \in C_2(r)$, $Q^{i}(r) \le Q(r)$, then the algorithm terminates, yielding 
+$(C_1(r), C_2(r))$ as the final partitioning.  Otherwise, we set 
+\begin{eqnarray}
+i^* = \arg\max_{i \in C_2(r)} Q^{i}(r),
+\end{eqnarray}
+and let 
+\begin{eqnarray}
+&C_1(r+1) = C_1(r) \cup \{i^*\},\\
+&C_2(r+1) = C_2(r) \setminus \{i^*\}.
+\end{eqnarray}
 
 \section{Experiment Results}
 In this section, we present the experiment results done on the so-called Enron E-mail data using the algorithms 
