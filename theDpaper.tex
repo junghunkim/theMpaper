@@ -192,9 +192,10 @@ W^r = \prod_{\ell=1}^{M} \exp\left(-\int_{\tau_{\ell-1}}^{\tau_\ell} \Lambda^r(s
 
 Our main results in this section are the specification of our EM steps.  Let $\psi^r$ denote the $r$-th estimate from our $EM$-sequence, and for each $\psi \in \Psi$, define  
 \begin{eqnarray}
-rQ_r(\psi) = \mathbf E_*[F^r(\psi)],
+Q_r(\psi) = \mathbf E_*[F^r(\psi)],
 \end{eqnarray}
 where $\mathbf E_*$ denote the expectation operator conditioal on the data $\mathcal D$.  
+The E-step can be completed using the following lemma:
 \begin{lem}
 Let $\xi$ be an $\mathcal F^r$-measurable random variable, where
 \begin{eqnarray}
@@ -205,9 +206,7 @@ Then,
 \mathbf E_*[\xi] = \mathbf E[\xi W^r]/\mathbf E[W^r].
 \end{eqnarray}
 \end{lem}
-
-
-the $(r+1)$-st estimate $\psi^{(r+1)}$ satisfies the following equations:
+Now, the M-step can be dervied explicited.  That is, the $(r+1)$-st estimate $\psi^{(r+1)}$ satisfies the following equations:
 \begin{eqnarray*}
 \sigma_{i,r}^2 &=& 2 \mathbf E_*\left[ \beta_i \int_0^1 \left(\mu_i - Y_i^r(t)\right)^2dt 
 - \left(\left.\mu_i Y_i^r(t) - \frac{1}{2} (Y_i^r(t))^2\right)\right|_0^1\right]\\\mu_{i,r} 
@@ -230,11 +229,43 @@ the $(r+1)$-st estimate $\psi^{(r+1)}$ satisfies the following equations:
 
 
 \section{Test of goodness of fit via Kalman-Bucy filtering}
-Our model for the communication records is a so-called multichannel doubly
-stochastic marked Poisson process which is comprised of $n(n-1)/2$ single-channel doubly stochastic marked Poisson process that are conditionally mutually independent Poisson process 
-given the information process.  In particular,  
-each $\{N_t^{(i,j)} : t \in [0,1]\}$ is a doubly stochastic Poisson process with
-corresponding intensity process whose intensity process is $\Lambda_{ij}(\cdot)$.
+Our model for the communication records is a so-called multichannel doubly stochastic Poisson process 
+which is comprised of $n(n-1)/2$ single-channel doubly stochastic Poisson process $\{N_{ij}(t):t\in[0,1]\}$ 
+that are conditionally mutually independent Poisson process given the information process, 
+which is our $X=(X_1,\ldots,X_n)$.  In particular, each $\{N_t^{(i,j)} : t \in [0,1]\}$ is a doubly stochastic 
+Poisson process with corresponding intensity process whose intensity process is $\Lambda_{ij}(\cdot)$.  
+
+Consider estimating the intensities at time $t$ in terms of an observed counting path on the interval $[0,t]$,
+with the estimator being linear.  That is, the estimate $\Lambda_{ij}^{*}(t)$ of $\Lambda_{ij}(t)$ is to be of 
+the form:
+\begin{eqnarray}
+\Lambda_{ij}^{*}(t) = a_{ij}(t) + \int_0^t h_{ij}(t,u) dN_{ij}(u),
+\end{eqnarray}
+for some deterministic function $a_{ij}(t)$ and impulse response function $h(t,u)$.  
+
+It follows from the theory [Donald Snyder, Thm 6.5.1] that the corresponding the minimum mean squared error estimate
+denoted by $\widehat{\Lambda}_{ij}(t)$ is the following:
+\begin{eqnarray}
+\widehat{\Lambda}_{ij}(t) = \mathbf E[\Lambda_{ij}(t)] + \int_0^t h_{ij}(t,u)\left[dN_{ij}(u) - E(\Lambda_{ij}(t))du\right],
+\end{eqnarray}
+where the optimum impulse response $h_0(t,u)$ is the solution to the integral equation:
+\begin{eqnarray}
+h_{ij}(t,u) E(\Lambda_{ij}(u)) 
++
+\int_0^t h_{ij}(t,s) C_{\Lambda_{ij}}(s,u) ds = C_{\Lambda_{ij}}(t,u)
+\end{eqnarray}
+for $0 \le u \le T$.  Here, $C_{\Lambda_{ij}}$ is the covariance function of the intensity process.  Furthermore,
+the result minimum mean-square error is given by:
+\begin{eqnarray}
+\mathbf E[(\Lambda_{ij}(t) - \widehat{\Lambda}_{ij}(t))^2] = h_{ij}(t,t) \mathbf E[\Lambda_{ij}(t)]. 
+\end{eqnarray}
+In fact, from its relation to a linear filtering problem 
+for observations that contains additive noise, the Kalman-Bucy algorithm satisfies
+the folowing set of equations:
+\begin{eqnarray}
+d\widehat{X}_{ij}(t)  = 
+\end{eqnarray}
+
 \begin{eqnarray}
 dX_i^*(t) = 
 \beta_i (\mu_i - X_i^*(t)) dt  
