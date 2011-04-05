@@ -269,19 +269,41 @@ d{X}^*(t)
 X^*(0) &=& \mathbf E[X(0)],
 \end{eqnarray*} 
 where $\Sigma^*(t)$ is a symmetric matrix that satisfies the multichannel variance equation,
-$\sigma_{ij}^*$ is the $i,j$-element of $\Sigma^*(t)$, and $\partial \Lambda(x)/\partial x$ denotes the Jacobian matrix.  The multichannel variance equation is
-\begin{eqnarray}
-d\Sigma^*(t) 
-=
-\left[ \right]^T
+$\sigma_{ij}^*$ is the $i,j$-element of $\Sigma^*(t)$, and $\partial \Lambda(x)/\partial x$ denotes the Jacobian matrix.  The multichannel variance equation (i.e.\ Riccati equation) is
+\begin{eqnarray*}
+&\ & d\Sigma^*(t) \\
+&= &
+\left[\partial a(t,X^*(t))/\partial X^*(t) \right]^T
 \Sigma^*(t) dt 
-+
-\Sigma_t^* 
-\left[ \right]
-dt
-+
++\Sigma^*(t) \left[\partial a(t,X^*(t)) /\partial X^*(t) \right]dt+ \xi^2 dt\\
+&\ & -
+\Sigma^*(t)
+\frac{
+\partial \Lambda(X^*(t))/\partial X^*(t) {\mathop{diag}}^{-1} \Lambda(X^*(t))(dN(t) - \Lambda(X^*(t)))dt
+}{\partial X^*(t)}
+\Sigma^*(t)
+\end{eqnarray*}
+Then, we choose to set 
+\begin{eqnarray}
+\Lambda^*(t) = \Lambda(X^*(t)).
 \end{eqnarray}
-
+Note that because our function $\Lambda(x)$ is a non-linear, this choice 
+is only of approximation i.e.\ the choice is an suboptimal estimator (with repsect to its mean squared error).  
+\begin{lem} (To Do: tidy up this CLAIM).  
+Let $\eta^*(t)$ be the process such that $d\eta^*(t) = dN(t) - \Lambda(X^*(t)) dt$.  Then, 
+\begin{description}
+\item[(i)] for $0 \le t_0 < t_1 < \ldots <t_M =1$,
+$$
+\{ \eta^*(t_r) - \eta^*(t_{r-1}) : r = 1,\ldots, M\} 
+$$ 
+is a set of independent random variables.
+\item[(ii)] As $r\rightarrow \infty$, the process 
+$$
+\sqrt{M_r}^{-1} \eta^{*,r}(t)
+$$
+converges in distribution to a standard Brownian motion.
+\end{description}
+\end{lem}
 \begin{figure}
 \begin{center}
 \includegraphics[scale=0.30]{v34_myDdata_w38.png}
@@ -344,7 +366,11 @@ and let
 &C_1(r+1) = C_1(r) \cup \{i^*\},\\
 &C_2(r+1) = C_2(r) \setminus \{i^*\}.
 \end{eqnarray}
-
+To this end, we also mention that there is a separation theorem for 
+the likelihood ratio:
+\begin{eqnarray}
+T = \frac{p^1(\mathcal D)}{p^0(\mathcal D)}.
+\end{eqnarray} 
 \section{Experiment Results}
 In this section, we present the experiment results done on the so-called Enron E-mail data using the algorithms 
 presented in this paper.  The raw full Enron E-mail data does not necessarily conform to our $\mathcal D$ data 
