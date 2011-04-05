@@ -232,52 +232,56 @@ Now, the M-step can be dervied explicited.  That is, the $(r+1)$-st estimate $\p
 Our model for the communication records is a so-called multichannel doubly stochastic Poisson process 
 which is comprised of $n(n-1)/2$ single-channel doubly stochastic Poisson process $\{N_{ij}(t):t\in[0,1]\}$ 
 that are conditionally mutually independent Poisson process given the information process, 
-which is our $X=(X_1,\ldots,X_n)$.  In particular, each $\{N_t^{(i,j)} : t \in [0,1]\}$ is a doubly stochastic 
+which is our $Y=(Y_1,\ldots,Y_n)$.  In particular, each $\{N_t^{(i,j)} : t \in [0,1]\}$ is a doubly stochastic 
 Poisson process with corresponding intensity process whose intensity process is $\Lambda_{ij}(\cdot)$.  
 
 Consider estimating the intensities at time $t$ in terms of an observed counting path on the interval $[0,t]$,
-with the estimator being linear.  That is, the estimate $\Lambda_{ij}^{*}(t)$ of $\Lambda_{ij}(t)$ is to be of 
+with the estimator being linear.  That is, the estimate $\Lambda^{*}(t)$ of $\Lambda(Y(t))$ is to be of 
 the form:
 \begin{eqnarray}
-\Lambda_{ij}^{*}(t) = a_{ij}(t) + \int_0^t h_{ij}(t,u) dN_{ij}(u),
+\Lambda^{*}(t) = f(t) + \int_0^t H(t,u) dN(u),
 \end{eqnarray}
-for some deterministic function $a_{ij}(t)$ and impulse response function $h(t,u)$.  
-
-It follows from the theory [Donald Snyder, Thm 6.5.1] that the corresponding the minimum mean squared error estimate
-denoted by $\widehat{\Lambda}_{ij}(t)$ is the following:
+for some deterministic function $f(t)$ and impulse response function $H(t,u)$.  It follows from the theory [Donald Snyder, Thm 6.5.1] that the corresponding the minimum mean squared error estimate denoted by ${\Lambda}^*(t)$ is the following:
 \begin{eqnarray}
-\widehat{\Lambda}_{ij}(t) = \mathbf E[\Lambda_{ij}(t)] + \int_0^t h_{ij}(t,u)\left[dN_{ij}(u) - E(\Lambda_{ij}(t))du\right],
+{\Lambda}^*(t) = \mathbf E[\Lambda(t)] + \int_0^t H^*(t,u)\left[dN(u) - E(\Lambda(t))du\right],
 \end{eqnarray}
-where the optimum impulse response $h_0(t,u)$ is the solution to the integral equation:
+where the optimum impulse response matrix $H^*(t,u)$ is the solution to the integral equation:
 \begin{eqnarray}
-h_{ij}(t,u) E(\Lambda_{ij}(u)) 
+H(t,u) E(\Lambda(u)) 
 +
-\int_0^t h_{ij}(t,s) C_{\Lambda_{ij}}(s,u) ds = C_{\Lambda_{ij}}(t,u)
+\int_0^t H^*(t,s) C_{\Lambda}(s,u) ds = C_{\Lambda}(t,u)
 \end{eqnarray}
-for $0 \le u \le T$.  Here, $C_{\Lambda_{ij}}$ is the covariance function of the intensity process.  Furthermore,
-the result minimum mean-square error is given by:
+for $0 \le u \le T$.  Here, $C_{\Lambda}$ is the cross-covariance function 
+of the intensity process.  
+Furthermore, the result minimum mean-square error is given by:
 \begin{eqnarray}
-\mathbf E[(\Lambda_{ij}(t) - \widehat{\Lambda}_{ij}(t))^2] = h_{ij}(t,t) \mathbf E[\Lambda_{ij}(t)]. 
+\mathbf E[(\Lambda(t) - {\Lambda}^*(t))(\Lambda(t) - {\Lambda}^*(t))^T] 
+= 
+H(t,t) \mathbf E[\Lambda(t)]. 
 \end{eqnarray}
 In fact, from its relation to a linear filtering problem 
-for observations that contains additive noise, the Kalman-Bucy algorithm satisfies
-the folowing set of equations:
+for observations that contains additive noise, Kalman-Bucy algorithm yields
+the following set of equations:
+\begin{eqnarray*}
+d{X}^*(t)
+&= & a(t,X^*(t))dt + \frac{1}{2} \sum_{i} \sum_{j} \sigma_{ij}^* \partial_{i}\partial_{j} a(t,X^*(t)) dt \\
+&\ & +\ \Sigma^*(t) \left[ \frac{\partial \Lambda(X^*(t)) }{\partial X^*(t)} \right] {\mathop{diag}}^{-1}\left[\Lambda(X^*(t))\right]\left[dN(t) - \Lambda(X^*(t))dt\right],\\
+X^*(0) &=& \mathbf E[X(0)],
+\end{eqnarray*} 
+where $\Sigma^*(t)$ is a symmetric matrix that satisfies the multichannel variance equation,
+$\sigma_{ij}^*$ is the $i,j$-element of $\Sigma^*(t)$, and $\partial \Lambda(x)/\partial x$ denotes the Jacobian matrix.  The multichannel variance equation is
 \begin{eqnarray}
-d\widehat{X}_{ij}(t)  = 
+d\Sigma^*(t) 
+=
+\left[ \right]^T
+\Sigma^*(t) dt 
++
+\Sigma_t^* 
+\left[ \right]
+dt
++
 \end{eqnarray}
 
-\begin{eqnarray}
-dX_i^*(t) = 
-\beta_i (\mu_i - X_i^*(t)) dt  
-+
-\Sigma_{t} () \texttt{diag}^{-1}[\lambda_k^k(X_t^*) [dN_t - \lambda_t(X_t^*)dt].
-\end{eqnarray}
-We can take
-\begin{eqnarray}
-\widehat{\lambda}_{ij}(t) 
-&=& \mathbf E\left[ \lambda_{ij}(t) \left| \mathcal F^{N}_t\right.\right] \\
-&=& \mathbf E\left[ \lambda_{ij}(t) D(t)\right]/\mathbf E\left[D(t)\right]
-\end{eqnarray}
 \begin{figure}
 \begin{center}
 \includegraphics[scale=0.30]{v34_myDdata_w38.png}
@@ -296,9 +300,9 @@ We can take
 \label{cepplot}
 \end{figure}
 
-\section{Greedy algorithm for iterative vertex nomination}
-Our main result of this paper concerns an algorithm 
-for correctly assigning each vertex into one of two classes, where witnin each group, all the members  
+\section{An algorithm for iterative vertex nomination}
+Our main result of this paper concerns an algorithm for correctly assigning 
+each vertex into one of two classes, where witnin each group, all the members  
 have the same parameter i.e.\ if vertex $i$ and vertex $j$ are in the same
 class, then $\psi_i = \psi_j$.  
 In this section, we provide a greedy algorithm for arriving at a partition 
