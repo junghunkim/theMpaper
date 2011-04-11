@@ -1,3 +1,4 @@
+cat("I changed it")
 rm(list=ls())
 source("simulator.r")
 source("Param_Init.R")
